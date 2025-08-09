@@ -124,10 +124,12 @@ class VelocityTablistService : TabService, Services.Fallback {
             ),
             entry.associatedName
         )
+        val nullInfo: WrapperPlayServerTeams.ScoreBoardTeamInfo? = null
+
         val teamAddPacket = WrapperPlayServerTeams(
             teamName,
             WrapperPlayServerTeams.TeamMode.ADD_ENTITIES,
-            Optional.empty(),
+            nullInfo,
             entry.associatedName
         )
 
@@ -135,6 +137,8 @@ class VelocityTablistService : TabService, Services.Fallback {
 
         PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, addPlayerPacket)
         PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, teamPacket)
+        PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, teamUpdatePacket)
+        PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, teamAddPacket)
     }
 
     override fun hideEntry(
