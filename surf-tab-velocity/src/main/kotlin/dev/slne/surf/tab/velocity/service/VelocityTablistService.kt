@@ -99,7 +99,7 @@ class VelocityTablistService : TabService, Services.Fallback {
             "${entry.weight}-${entry.associatedName}",
             WrapperPlayServerTeams.TeamMode.CREATE,
             WrapperPlayServerTeams.ScoreBoardTeamInfo(
-                Component.text("fake-${entry.associatedPlayer}"),
+                Component.text(entry.associatedName),
                 null,
                 null,
                 WrapperPlayServerTeams.NameTagVisibility.ALWAYS,
