@@ -2,7 +2,7 @@ package dev.slne.surf.tab.core.factory
 
 import dev.slne.surf.surfapi.core.api.util.requiredService
 import dev.slne.surf.tab.api.player.TabPlayer
-import java.util.UUID
+import java.util.*
 
 interface TabPlayerFactory {
     fun createPlayer(playerObject: Any): TabPlayer

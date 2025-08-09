@@ -1,5 +1,6 @@
 package dev.slne.surf.tab.velocity.service
 
+import com.google.auto.service.AutoService
 import dev.slne.surf.tab.api.model.TabEntry
 import dev.slne.surf.tab.api.player.TabPlayer
 import dev.slne.surf.tab.core.service.TabService
@@ -9,6 +10,7 @@ import dev.slne.surf.tab.velocity.util.velocityPlayer
 import net.kyori.adventure.util.Services
 import java.util.*
 
+@AutoService(TabService::class)
 class VelocityTablistService : TabService, Services.Fallback {
     override fun sendTablistUpdate(player: TabPlayer) {
         sendHeader(player)
@@ -18,7 +20,7 @@ class VelocityTablistService : TabService, Services.Fallback {
     override fun sendHeader(player: TabPlayer) {
         val velocityPlayer = player.velocityPlayer() ?: return
 
-        tabConfig.config.header.formatMiniMessage(player.uniqueId).thenAccept {
+        tabConfig.config().header.formatMiniMessage(player.uniqueId).thenAccept {
             velocityPlayer.sendPlayerListHeader(it)
         }
     }
@@ -26,7 +28,7 @@ class VelocityTablistService : TabService, Services.Fallback {
     override fun sendFooter(player: TabPlayer) {
         val velocityPlayer = player.velocityPlayer() ?: return
 
-        tabConfig.config.footer.formatMiniMessage(player.uniqueId).thenAccept {
+        tabConfig.config().footer.formatMiniMessage(player.uniqueId).thenAccept {
             velocityPlayer.sendPlayerListFooter(it)
         }
     }
