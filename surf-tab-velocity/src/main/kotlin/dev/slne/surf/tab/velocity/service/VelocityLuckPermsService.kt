@@ -24,7 +24,6 @@ class VelocityLuckPermsService : LuckPermsService, Services.Fallback {
     }
 
     fun onNodeMutate(event: UserDataRecalculateEvent) {
-        println("Updated note. Updating tablist...")
         plugin.proxy.allPlayers.forEach {
             tabService.sendTablistUpdate(it.tabPlayer())
         }

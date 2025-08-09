@@ -47,7 +47,6 @@ class VelocityTablistService : TabService, Services.Fallback {
                     luckPermsService.getWeight(online.tabPlayer())
                 )
 
-                println("associatedPlayer: ${entry.associatedPlayer} WEIGHT: ${entry.weight}")
                 showEntry(player, entry)
             }
         }
@@ -132,8 +131,6 @@ class VelocityTablistService : TabService, Services.Fallback {
             nullInfo,
             entry.associatedName
         )
-
-        println("associatedPlayer: ${entry.associatedPlayer} WEIGHT: ${entry.weight}: $teamName")
 
         PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, addPlayerPacket)
         PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, teamPacket)
