@@ -79,8 +79,7 @@ class VelocityTablistService : TabService, Services.Fallback {
                 WrapperPlayServerPlayerInfoUpdate.Action.ADD_PLAYER,
                 WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_DISPLAY_NAME,
                 WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED,
-                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LATENCY,
-                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LIST_ORDER
+                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LATENCY
             ),
             WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
                 UserProfile(
@@ -95,8 +94,10 @@ class VelocityTablistService : TabService, Services.Fallback {
             )
         )
 
+        val teamName = "${entry.weight}-${entry.associatedName}"
+
         val teamPacket = WrapperPlayServerTeams(
-            "${entry.weight}-${entry.associatedName}",
+            teamName,
             WrapperPlayServerTeams.TeamMode.CREATE,
             WrapperPlayServerTeams.ScoreBoardTeamInfo(
                 Component.text(entry.associatedName),
@@ -109,6 +110,28 @@ class VelocityTablistService : TabService, Services.Fallback {
             ),
             entry.associatedName
         )
+        val teamUpdatePacket = WrapperPlayServerTeams(
+            teamName,
+            WrapperPlayServerTeams.TeamMode.UPDATE,
+            WrapperPlayServerTeams.ScoreBoardTeamInfo(
+                entry.display,
+                null,
+                null,
+                WrapperPlayServerTeams.NameTagVisibility.ALWAYS,
+                WrapperPlayServerTeams.CollisionRule.ALWAYS,
+                NamedTextColor.RED,
+                WrapperPlayServerTeams.OptionData.NONE
+            ),
+            entry.associatedName
+        )
+        val teamAddPacket = WrapperPlayServerTeams(
+            teamName,
+            WrapperPlayServerTeams.TeamMode.ADD_ENTITIES,
+            Optional.empty(),
+            entry.associatedName
+        )
+
+        println("associatedPlayer: ${entry.associatedPlayer} WEIGHT: ${entry.weight}: $teamName")
 
         PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, addPlayerPacket)
         PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, teamPacket)
