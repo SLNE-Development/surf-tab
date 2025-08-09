@@ -7,3 +7,8 @@ buildscript {
         classpath("dev.slne.surf:surf-api-gradle-plugin:1.21.4+")
     }
 }
+
+allprojects {
+    group = "dev.slne.surf.tab"
+    version = findProperty("version")!!
+}
