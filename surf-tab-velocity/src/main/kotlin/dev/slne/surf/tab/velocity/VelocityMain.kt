@@ -7,6 +7,7 @@ import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
+import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.config.TabConfigProvider
 import dev.slne.surf.tab.velocity.listener.ConnectionListener
 
@@ -25,6 +26,8 @@ class VelocityMain @Inject constructor(
     @Subscribe
     fun onInitialization(event: ProxyInitializeEvent) {
         INSTANCE = this
+
+        surfTabCommand()
 
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
     }
