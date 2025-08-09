@@ -7,6 +7,7 @@ import java.util.*
 
 data class TabEntryImpl(
     override val associatedPlayer: UUID,
+    override val associatedName: String,
     override val display: Component,
     override val gameMode: TabGameMode,
     override val ping: Int,

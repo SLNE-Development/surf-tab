@@ -8,7 +8,7 @@ import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.util.tabPlayer
 import net.kyori.adventure.util.Services
 import net.luckperms.api.LuckPermsProvider
-import net.luckperms.api.event.node.NodeMutateEvent
+import net.luckperms.api.event.user.UserDataRecalculateEvent
 
 @AutoService(LuckPermsService::class)
 class VelocityLuckPermsService : LuckPermsService, Services.Fallback {
@@ -20,10 +20,10 @@ class VelocityLuckPermsService : LuckPermsService, Services.Fallback {
 
     override fun registerListener() {
         val luckperms = LuckPermsProvider.get()
-        luckperms.eventBus.subscribe(plugin, NodeMutateEvent::class.java, ::onNodeMutate)
+        luckperms.eventBus.subscribe(plugin, UserDataRecalculateEvent::class.java, ::onNodeMutate)
     }
 
-    fun onNodeMutate(event: NodeMutateEvent) {
+    fun onNodeMutate(event: UserDataRecalculateEvent) {
         println("Updated note. Updating tablist...")
         plugin.proxy.allPlayers.forEach {
             tabService.sendTablistUpdate(it.tabPlayer())

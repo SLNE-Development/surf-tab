@@ -11,6 +11,7 @@ import dev.slne.surf.tab.core.service.luckPermsService
 import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.config.TabConfigProvider
 import dev.slne.surf.tab.velocity.listener.ConnectionListener
+import dev.slne.surf.tab.velocity.util.papiProxyInstance
 
 import java.nio.file.Path
 import kotlin.jvm.optionals.getOrNull
@@ -30,6 +31,8 @@ class VelocityMain @Inject constructor(
         surfTabCommand()
 
         luckPermsService.registerListener()
+        papiProxyInstance.cacheExpiry =
+            0L // This is intentionally set to 0 to disable caching. At the moment, the tablist is not updated dynamically, only on permission changes and connections.
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
     }
 

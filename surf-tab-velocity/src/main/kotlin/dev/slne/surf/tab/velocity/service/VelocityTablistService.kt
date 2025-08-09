@@ -4,8 +4,8 @@ import com.github.retrooper.packetevents.PacketEvents
 import com.github.retrooper.packetevents.protocol.player.UserProfile
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoRemove
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTeams
 import com.google.auto.service.AutoService
-import dev.slne.surf.surfapi.core.api.messages.adventure.plain
 import dev.slne.surf.tab.api.model.TabEntry
 import dev.slne.surf.tab.api.model.TabGameMode
 import dev.slne.surf.tab.api.player.TabPlayer
@@ -18,6 +18,8 @@ import dev.slne.surf.tab.velocity.util.formatMiniMessage
 import dev.slne.surf.tab.velocity.util.tabPlayer
 import dev.slne.surf.tab.velocity.util.toPeGameMode
 import dev.slne.surf.tab.velocity.util.velocityPlayer
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.util.Services
 import java.util.*
 
@@ -40,17 +42,13 @@ class VelocityTablistService : TabService, Services.Fallback {
         plugin.proxy.allPlayers.forEach { online ->
             tabConfig.config().displayName.formatMiniMessage(online.uniqueId).thenAccept {
                 val entry = TabEntryImpl(
-                    online.uniqueId, it,
+                    online.uniqueId, online.username, it,
                     TabGameMode.CREATIVE, online.ping.toInt(),
                     luckPermsService.getWeight(online.tabPlayer())
                 )
 
-                println(entry.display.plain())
                 println("associatedPlayer: ${entry.associatedPlayer} WEIGHT: ${entry.weight}")
-
                 showEntry(player, entry)
-
-                println("${player.name}, ${entry.display.plain()}")
             }
         }
     }
@@ -93,13 +91,27 @@ class VelocityTablistService : TabService, Services.Fallback {
                 entry.gameMode.toPeGameMode(),
                 entry.display,
                 null,
-                entry.weight
+                0
             )
         )
 
-        println("packet: $addPlayerPacket")
+        val teamPacket = WrapperPlayServerTeams(
+            "${entry.weight}-${entry.associatedName}",
+            WrapperPlayServerTeams.TeamMode.CREATE,
+            WrapperPlayServerTeams.ScoreBoardTeamInfo(
+                Component.text("fake-${entry.associatedPlayer}"),
+                null,
+                null,
+                WrapperPlayServerTeams.NameTagVisibility.ALWAYS,
+                WrapperPlayServerTeams.CollisionRule.ALWAYS,
+                NamedTextColor.RED,
+                WrapperPlayServerTeams.OptionData.NONE
+            ),
+            entry.associatedName
+        )
 
         PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, addPlayerPacket)
+        PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, teamPacket)
     }
 
     override fun hideEntry(

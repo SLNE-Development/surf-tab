@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component
 import java.util.*
 
 interface TabEntry {
+    val associatedName: String
     val associatedPlayer: UUID
     val display: Component
     val gameMode: TabGameMode
