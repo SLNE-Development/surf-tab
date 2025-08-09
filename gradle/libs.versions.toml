@@ -1,5 +1,7 @@
 [versions]
 papi-proxy = "1.8.4"
+luckperms-api = "5.4"
 
 [libraries]
 papi-proxy = { module = "net.william278:papiproxybridge", version.ref = "papi-proxy" }
+luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms-api" }

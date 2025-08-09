@@ -4,5 +4,5 @@ enum class TabGameMode {
     CREATIVE,
     SURVIVAL,
     ADVENTURE,
-    SPECTATOR,
+    SPECTATOR
 }

@@ -4,21 +4,27 @@ import dev.slne.surf.surfapi.core.api.util.requiredService
 import dev.slne.surf.tab.api.model.TabEntry
 import dev.slne.surf.tab.api.player.TabPlayer
 import it.unimi.dsi.fastutil.objects.ObjectSet
-import java.util.UUID
+import java.util.*
 
 interface TabService {
     fun sendTablistUpdate(player: TabPlayer)
+    fun clearActualTablist(player: TabPlayer)
+    fun sendFakeTablist(player: TabPlayer)
+
     fun sendHeader(player: TabPlayer)
     fun sendFooter(player: TabPlayer)
 
     fun showEntry(player: TabPlayer, entry: TabEntry)
-    fun showEntries(player: TabPlayer, entries: ObjectSet<TabEntry>) = entries.forEach { showEntry(player, it) }
+    fun showEntries(player: TabPlayer, entries: ObjectSet<TabEntry>) =
+        entries.forEach { showEntry(player, it) }
 
     fun hideEntry(player: TabPlayer, entry: TabEntry)
-    fun hideEntries(player: TabPlayer, entries: ObjectSet<TabEntry>) = entries.forEach { hideEntry(player, it) }
+    fun hideEntries(player: TabPlayer, entries: ObjectSet<TabEntry>) =
+        entries.forEach { hideEntry(player, it) }
 
     fun updateEntry(player: TabPlayer, associatedWithEntry: UUID)
-    fun updateEntries(player: TabPlayer, associatedWithEntries: ObjectSet<UUID>) = associatedWithEntries.forEach { updateEntry(player, it) }
+    fun updateEntries(player: TabPlayer, associatedWithEntries: ObjectSet<UUID>) =
+        associatedWithEntries.forEach { updateEntry(player, it) }
 
     companion object {
         val INSTANCE = requiredService<TabService>()

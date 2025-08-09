@@ -1,11 +1,22 @@
 package dev.slne.surf.tab.velocity.service
 
+import com.github.retrooper.packetevents.PacketEvents
+import com.github.retrooper.packetevents.protocol.player.UserProfile
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoRemove
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate
 import com.google.auto.service.AutoService
+import dev.slne.surf.surfapi.core.api.messages.adventure.plain
 import dev.slne.surf.tab.api.model.TabEntry
+import dev.slne.surf.tab.api.model.TabGameMode
 import dev.slne.surf.tab.api.player.TabPlayer
+import dev.slne.surf.tab.core.model.TabEntryImpl
 import dev.slne.surf.tab.core.service.TabService
+import dev.slne.surf.tab.core.service.luckPermsService
+import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.tabConfig
 import dev.slne.surf.tab.velocity.util.formatMiniMessage
+import dev.slne.surf.tab.velocity.util.tabPlayer
+import dev.slne.surf.tab.velocity.util.toPeGameMode
 import dev.slne.surf.tab.velocity.util.velocityPlayer
 import net.kyori.adventure.util.Services
 import java.util.*
@@ -15,6 +26,33 @@ class VelocityTablistService : TabService, Services.Fallback {
     override fun sendTablistUpdate(player: TabPlayer) {
         sendHeader(player)
         sendFooter(player)
+
+        clearActualTablist(player)
+        sendFakeTablist(player)
+    }
+
+    override fun clearActualTablist(player: TabPlayer) {
+        val velocityPlayer = player.velocityPlayer() ?: return
+        velocityPlayer.tabList.entries.forEach { it.isListed = false }
+    }
+
+    override fun sendFakeTablist(player: TabPlayer) {
+        plugin.proxy.allPlayers.forEach { online ->
+            tabConfig.config().displayName.formatMiniMessage(online.uniqueId).thenAccept {
+                val entry = TabEntryImpl(
+                    online.uniqueId, it,
+                    TabGameMode.CREATIVE, online.ping.toInt(),
+                    luckPermsService.getWeight(online.tabPlayer())
+                )
+
+                println(entry.display.plain())
+                println("associatedPlayer: ${entry.associatedPlayer} WEIGHT: ${entry.weight}")
+
+                showEntry(player, entry)
+
+                println("${player.name}, ${entry.display.plain()}")
+            }
+        }
     }
 
     override fun sendHeader(player: TabPlayer) {
@@ -37,14 +75,43 @@ class VelocityTablistService : TabService, Services.Fallback {
         player: TabPlayer,
         entry: TabEntry
     ) {
-        TODO("Not yet implemented")
+        val velocityPlayer = player.velocityPlayer() ?: return
+        val addPlayerPacket = WrapperPlayServerPlayerInfoUpdate(
+            EnumSet.of(
+                WrapperPlayServerPlayerInfoUpdate.Action.ADD_PLAYER,
+                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_DISPLAY_NAME,
+                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED,
+                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LATENCY,
+                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LIST_ORDER
+            ),
+            WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
+                UserProfile(
+                    entry.associatedPlayer, "fake-${entry.associatedPlayer}"
+                ),
+                true,
+                entry.ping,
+                entry.gameMode.toPeGameMode(),
+                entry.display,
+                null,
+                entry.weight
+            )
+        )
+
+        println("packet: $addPlayerPacket")
+
+        PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, addPlayerPacket)
     }
 
     override fun hideEntry(
         player: TabPlayer,
         entry: TabEntry
     ) {
-        TODO("Not yet implemented")
+        val velocityPlayer = player.velocityPlayer() ?: return
+        val removePlayerPacket = WrapperPlayServerPlayerInfoRemove(
+            entry.associatedPlayer
+        )
+
+        PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, removePlayerPacket)
     }
 
     override fun updateEntry(

@@ -16,4 +16,5 @@ velocityPluginFile {
 dependencies {
     api(project(":surf-tab-core"))
     compileOnly(libs.papi.proxy)
+    compileOnly(libs.luckperms.api)
 }
