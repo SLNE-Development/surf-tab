@@ -1,6 +1,5 @@
 package dev.slne.surf.tab.api.model
 
-import dev.slne.surf.tab.api.model.TabServer
 import it.unimi.dsi.fastutil.objects.ObjectSet
 
 interface TabGroup {
