@@ -6,8 +6,8 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPl
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTeams
 import com.google.auto.service.AutoService
-import dev.slne.surf.tab.api.model.TabEntry
-import dev.slne.surf.tab.api.model.TabGameMode
+import dev.slne.surf.tab.api.TabEntry
+import dev.slne.surf.tab.api.player.TabGameMode
 import dev.slne.surf.tab.api.player.TabPlayer
 import dev.slne.surf.tab.core.model.TabEntryImpl
 import dev.slne.surf.tab.core.service.TabService

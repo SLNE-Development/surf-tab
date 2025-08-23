@@ -1,7 +1,7 @@
 package dev.slne.surf.tab.core.service
 
 import dev.slne.surf.surfapi.core.api.util.requiredService
-import dev.slne.surf.tab.api.model.TabEntry
+import dev.slne.surf.tab.api.TabEntry
 import dev.slne.surf.tab.api.player.TabPlayer
 import it.unimi.dsi.fastutil.objects.ObjectSet
 import java.util.*

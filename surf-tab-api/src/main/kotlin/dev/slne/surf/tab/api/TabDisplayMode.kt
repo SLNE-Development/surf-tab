@@ -1,4 +1,4 @@
-package dev.slne.surf.tab.api.model
+package dev.slne.surf.tab.api
 
 enum class TabDisplayMode {
     PER_PLAYER,

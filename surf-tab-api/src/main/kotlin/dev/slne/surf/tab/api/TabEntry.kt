@@ -1,5 +1,6 @@
-package dev.slne.surf.tab.api.model
+package dev.slne.surf.tab.api
 
+import dev.slne.surf.tab.api.player.TabGameMode
 import net.kyori.adventure.text.Component
 import java.util.*
 

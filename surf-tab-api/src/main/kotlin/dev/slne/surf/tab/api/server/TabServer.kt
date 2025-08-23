@@ -1,4 +1,4 @@
-package dev.slne.surf.tab.api.model
+package dev.slne.surf.tab.api.server
 
 import dev.slne.surf.tab.api.player.TabPlayer
 import it.unimi.dsi.fastutil.objects.ObjectSet
