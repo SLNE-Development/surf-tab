@@ -1,17 +1,22 @@
 package dev.slne.surf.tab.velocity.util
 
+import io.github.miniplaceholders.api.MiniPlaceholders
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.minimessage.MiniMessage
-import net.william278.papiproxybridge.api.PlaceholderAPI
-import java.util.*
-import java.util.concurrent.CompletableFuture
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 
-val papiProxyInstance = PlaceholderAPI.createInstance()
 
-fun String.formatMiniMessage(player: UUID): CompletableFuture<Component> =
-    papiProxyInstance.formatPlaceholders(this, player).thenApply {
-        MiniMessage.miniMessage().deserialize(it)
-    }
+fun String.formatWithAdventure(): Component {
+    val resolvers = listOf(
+        MiniPlaceholders.globalPlaceholders(),
+        MiniPlaceholders.audiencePlaceholders(),
+        MiniPlaceholders.relationalPlaceholders(),
+        MiniPlaceholders.relationalGlobalPlaceholders(),
+        MiniPlaceholders.audienceGlobalPlaceholders()
+    )
+
+    return MiniMessage.miniMessage().deserialize(this, TagResolver.resolver(resolvers))
+}
 
 fun TextColor.mm() = "<${this.asHexString()}>"

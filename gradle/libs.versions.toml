@@ -1,6 +1,6 @@
 [versions]
-mini-placeholders = "3.0.0-SNAPSHOT"
-mini-placeholders-kotlin = "3.0.0-SNAPSHOT"
+mini-placeholders = "3.0.1"
+mini-placeholders-kotlin = "3.0.1"
 luckperms-api = "5.4"
 
 [libraries]

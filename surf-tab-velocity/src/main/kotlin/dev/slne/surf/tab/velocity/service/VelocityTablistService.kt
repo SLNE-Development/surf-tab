@@ -40,6 +40,8 @@ class VelocityTablistService : TabService, Services.Fallback {
 
     override fun sendFakeTablist(player: TabPlayer) {
         plugin.proxy.allPlayers.forEach { online ->
+            tabConfig.config()
+
             tabConfig.config().displayName.formatMiniMessage(online.uniqueId).thenAccept {
                 val entry = TabEntryImpl(
                     online.uniqueId, online.username, it,
