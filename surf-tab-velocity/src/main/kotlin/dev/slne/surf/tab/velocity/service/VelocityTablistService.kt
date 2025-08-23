@@ -14,7 +14,7 @@ import dev.slne.surf.tab.core.service.TabService
 import dev.slne.surf.tab.core.service.luckPermsService
 import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.tabConfig
-import dev.slne.surf.tab.velocity.util.formatMiniMessage
+import dev.slne.surf.tab.velocity.util.formatWithAdventure
 import dev.slne.surf.tab.velocity.util.tabPlayer
 import dev.slne.surf.tab.velocity.util.toPeGameMode
 import dev.slne.surf.tab.velocity.util.velocityPlayer
@@ -39,35 +39,33 @@ class VelocityTablistService : TabService, Services.Fallback {
     }
 
     override fun sendFakeTablist(player: TabPlayer) {
+        val velocityPlayer = player.velocityPlayer() ?: return
+
         plugin.proxy.allPlayers.forEach { online ->
-            tabConfig.config()
+            val display = tabConfig.config().displayName.formatWithAdventure(velocityPlayer, online)
 
-            tabConfig.config().displayName.formatMiniMessage(online.uniqueId).thenAccept {
-                val entry = TabEntryImpl(
-                    online.uniqueId, online.username, it,
-                    TabGameMode.CREATIVE, online.ping.toInt(),
-                    luckPermsService.getWeight(online.tabPlayer())
-                )
+            val entry = TabEntryImpl(
+                online.uniqueId, online.username, display,
+                TabGameMode.CREATIVE, online.ping.toInt(),
+                luckPermsService.getWeight(online.tabPlayer())
+            )
 
-                showEntry(player, entry)
-            }
+            showEntry(player, entry)
         }
     }
 
     override fun sendHeader(player: TabPlayer) {
         val velocityPlayer = player.velocityPlayer() ?: return
+        val header = tabConfig.config().header.formatWithAdventure(velocityPlayer)
 
-        tabConfig.config().header.formatMiniMessage(player.uniqueId).thenAccept {
-            velocityPlayer.sendPlayerListHeader(it)
-        }
+        velocityPlayer.sendPlayerListHeader(header)
     }
 
     override fun sendFooter(player: TabPlayer) {
         val velocityPlayer = player.velocityPlayer() ?: return
+        val footer = tabConfig.config().footer.formatWithAdventure(velocityPlayer)
 
-        tabConfig.config().footer.formatMiniMessage(player.uniqueId).thenAccept {
-            velocityPlayer.sendPlayerListFooter(it)
-        }
+        velocityPlayer.sendPlayerListFooter(footer)
     }
 
     override fun showEntry(

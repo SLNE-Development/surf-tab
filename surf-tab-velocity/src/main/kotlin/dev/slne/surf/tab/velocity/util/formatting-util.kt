@@ -1,13 +1,15 @@
 package dev.slne.surf.tab.velocity.util
 
 import io.github.miniplaceholders.api.MiniPlaceholders
+import io.github.miniplaceholders.api.types.RelationalAudience
+import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 
 
-fun String.formatWithAdventure(): Component {
+fun String.formatWithAdventure(player: Audience, other: Audience? = null): Component {
     val resolvers = listOf(
         MiniPlaceholders.globalPlaceholders(),
         MiniPlaceholders.audiencePlaceholders(),
@@ -16,7 +18,12 @@ fun String.formatWithAdventure(): Component {
         MiniPlaceholders.audienceGlobalPlaceholders()
     )
 
-    return MiniMessage.miniMessage().deserialize(this, TagResolver.resolver(resolvers))
+    if (other != null) {
+        return MiniMessage.miniMessage()
+            .deserialize(this, RelationalAudience(player, other), TagResolver.resolver(resolvers))
+    }
+
+    return MiniMessage.miniMessage().deserialize(this, player, TagResolver.resolver(resolvers))
 }
 
 fun TextColor.mm() = "<${this.asHexString()}>"
