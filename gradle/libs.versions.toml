@@ -1,7 +1,9 @@
 [versions]
-papi-proxy = "1.8.4"
+mini-placeholders = "3.0.0-SNAPSHOT"
+mini-placeholders-kotlin = "3.0.0-SNAPSHOT"
 luckperms-api = "5.4"
 
 [libraries]
-papi-proxy = { module = "net.william278:papiproxybridge", version.ref = "papi-proxy" }
+mini-placeholders = { module = "io.github.miniplaceholders:miniplaceholders-api", version.ref = "mini-placeholders" }
+mini-placeholders-kotlin = { module = "io.github.miniplaceholders:miniplaceholders-kotlin-ext", version.ref = "mini-placeholders-kotlin" }
 luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms-api" }
