@@ -16,6 +16,7 @@ import dev.slne.surf.tab.velocity.util.toTabProfile
 import dev.slne.surf.tab.velocity.util.velocityPlayer
 import net.kyori.adventure.util.Services
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 @AutoService(TabService::class)
 class VelocityTablistService : TabService, Services.Fallback {
@@ -68,13 +69,14 @@ class VelocityTablistService : TabService, Services.Fallback {
         entry: TabEntry
     ) {
         val velocityPlayer = player.velocityPlayer() ?: return
+        val targetPlayer = plugin.proxy.getPlayer(entry.profile.uuid).getOrNull() ?: return
 
         velocityPlayer.tabList.addEntry(
             TabListEntry.builder()
-                .tabList(velocityPlayer.tabList)
-                .profile(velocityPlayer.gameProfile)
+                .tabList(targetPlayer.tabList)
+                .profile(targetPlayer.gameProfile)
                 .displayName(entry.display)
-                .latency(velocityPlayer.ping.toInt())
+                .latency(targetPlayer.ping.toInt())
                 .gameMode(TabGameMode.CREATIVE.index)
                 .listed(true)
                 .listOrder(entry.weight)
