@@ -2,6 +2,8 @@ package dev.slne.surf.tab.velocity.service
 
 import com.google.auto.service.AutoService
 import com.velocitypowered.api.proxy.player.TabListEntry
+import dev.slne.surf.surfapi.core.api.util.logger
+import dev.slne.surf.tab.api.TabDisplayMode
 import dev.slne.surf.tab.api.TabEntry
 import dev.slne.surf.tab.api.player.TabGameMode
 import dev.slne.surf.tab.api.player.TabPlayer
@@ -35,18 +37,63 @@ class VelocityTablistService : TabService, Services.Fallback {
 
     override fun sendFakeTablist(player: TabPlayer) {
         val velocityPlayer = player.velocityPlayer() ?: return
+        val tabMode = tabConfig.config().displayMode
 
-        plugin.proxy.allPlayers.forEach { online ->
-            val display = tabConfig.config().displayName.formatWithAdventure(online, velocityPlayer)
+        when (tabMode) {
+            TabDisplayMode.PER_PLAYER -> {
+                showEntry(
+                    player, TabEntryImpl(
+                        velocityPlayer.gameProfile.toTabProfile(),
+                        tabConfig.config().displayName.formatWithAdventure(
+                            velocityPlayer,
+                            velocityPlayer
+                        ),
+                        TabGameMode.CREATIVE,
+                        velocityPlayer.ping.toInt(),
+                        luckPermsService.getWeight(velocityPlayer.tabPlayer())
+                    )
+                )
+            }
 
-            val entry = TabEntryImpl(
-                online.gameProfile.toTabProfile(),
-                display,
-                TabGameMode.CREATIVE, online.ping.toInt(),
-                luckPermsService.getWeight(online.tabPlayer())
-            )
+            TabDisplayMode.PER_WORLD -> logger().atWarning()
+                .log("TabDisplayMode PER_WORLD is not supported on Velocity!")
 
-            showEntry(player, entry)
+            TabDisplayMode.PER_SERVER -> {
+                val server = velocityPlayer.currentServer.getOrNull()?.server ?: return
+                server.playersConnected.forEach { online ->
+                    val display =
+                        tabConfig.config().displayName.formatWithAdventure(online, velocityPlayer)
+
+                    val entry = TabEntryImpl(
+                        online.gameProfile.toTabProfile(),
+                        display,
+                        TabGameMode.CREATIVE,
+                        online.ping.toInt(),
+                        luckPermsService.getWeight(online.tabPlayer())
+                    )
+
+                    showEntry(player, entry)
+                }
+            }
+
+            TabDisplayMode.PER_PROXY -> {
+                plugin.proxy.allPlayers.forEach { online ->
+                    val display =
+                        tabConfig.config().displayName.formatWithAdventure(online, velocityPlayer)
+
+                    val entry = TabEntryImpl(
+                        online.gameProfile.toTabProfile(),
+                        display,
+                        TabGameMode.CREATIVE, online.ping.toInt(),
+                        luckPermsService.getWeight(online.tabPlayer())
+                    )
+
+                    showEntry(player, entry)
+                }
+            }
+
+            TabDisplayMode.CLOUD_GLOBAL -> logger().atWarning()
+                .log("TabDisplayMode CLOUD_GLOBAL is not supported on Velocity!")
         }
     }
 
