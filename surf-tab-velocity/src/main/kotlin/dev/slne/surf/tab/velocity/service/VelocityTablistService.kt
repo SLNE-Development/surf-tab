@@ -1,11 +1,9 @@
 package dev.slne.surf.tab.velocity.service
 
-import com.github.retrooper.packetevents.PacketEvents
-import com.github.retrooper.packetevents.protocol.player.UserProfile
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoRemove
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerInfoUpdate
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTeams
 import com.google.auto.service.AutoService
+import com.velocitypowered.api.proxy.player.TabListEntry
+import dev.slne.surf.surfapi.core.api.util.logger
+import dev.slne.surf.tab.api.TabDisplayMode
 import dev.slne.surf.tab.api.TabEntry
 import dev.slne.surf.tab.api.player.TabGameMode
 import dev.slne.surf.tab.api.player.TabPlayer
@@ -16,12 +14,11 @@ import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.tabConfig
 import dev.slne.surf.tab.velocity.util.formatWithAdventure
 import dev.slne.surf.tab.velocity.util.tabPlayer
-import dev.slne.surf.tab.velocity.util.toPeGameMode
+import dev.slne.surf.tab.velocity.util.toTabProfile
 import dev.slne.surf.tab.velocity.util.velocityPlayer
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.util.Services
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 @AutoService(TabService::class)
 class VelocityTablistService : TabService, Services.Fallback {
@@ -35,22 +32,68 @@ class VelocityTablistService : TabService, Services.Fallback {
 
     override fun clearActualTablist(player: TabPlayer) {
         val velocityPlayer = player.velocityPlayer() ?: return
-        velocityPlayer.tabList.entries.forEach { it.isListed = false }
+        velocityPlayer.tabList.entries.forEach { velocityPlayer.tabList.removeEntry(it.profile.id) }
     }
 
     override fun sendFakeTablist(player: TabPlayer) {
         val velocityPlayer = player.velocityPlayer() ?: return
+        val tabMode = tabConfig.config().displayMode
 
-        plugin.proxy.allPlayers.forEach { online ->
-            val display = tabConfig.config().displayName.formatWithAdventure(velocityPlayer, online)
+        when (tabMode) {
+            TabDisplayMode.PER_PLAYER -> {
+                showEntry(
+                    player, TabEntryImpl(
+                        velocityPlayer.gameProfile.toTabProfile(),
+                        tabConfig.config().displayName.formatWithAdventure(
+                            velocityPlayer,
+                            velocityPlayer
+                        ),
+                        TabGameMode.CREATIVE,
+                        velocityPlayer.ping.toInt(),
+                        luckPermsService.getWeight(velocityPlayer.tabPlayer())
+                    )
+                )
+            }
 
-            val entry = TabEntryImpl(
-                online.uniqueId, online.username, display,
-                TabGameMode.CREATIVE, online.ping.toInt(),
-                luckPermsService.getWeight(online.tabPlayer())
-            )
+            TabDisplayMode.PER_WORLD -> logger().atWarning()
+                .log("TabDisplayMode PER_WORLD is not supported on Velocity!")
 
-            showEntry(player, entry)
+            TabDisplayMode.PER_SERVER -> {
+                val server = velocityPlayer.currentServer.getOrNull()?.server ?: return
+                server.playersConnected.forEach { online ->
+                    val display =
+                        tabConfig.config().displayName.formatWithAdventure(online, velocityPlayer)
+
+                    val entry = TabEntryImpl(
+                        online.gameProfile.toTabProfile(),
+                        display,
+                        TabGameMode.CREATIVE,
+                        online.ping.toInt(),
+                        luckPermsService.getWeight(online.tabPlayer())
+                    )
+
+                    showEntry(player, entry)
+                }
+            }
+
+            TabDisplayMode.PER_PROXY -> {
+                plugin.proxy.allPlayers.forEach { online ->
+                    val display =
+                        tabConfig.config().displayName.formatWithAdventure(online, velocityPlayer)
+
+                    val entry = TabEntryImpl(
+                        online.gameProfile.toTabProfile(),
+                        display,
+                        TabGameMode.CREATIVE, online.ping.toInt(),
+                        luckPermsService.getWeight(online.tabPlayer())
+                    )
+
+                    showEntry(player, entry)
+                }
+            }
+
+            TabDisplayMode.CLOUD_GLOBAL -> logger().atWarning()
+                .log("TabDisplayMode CLOUD_GLOBAL is not supported on Velocity!")
         }
     }
 
@@ -73,81 +116,28 @@ class VelocityTablistService : TabService, Services.Fallback {
         entry: TabEntry
     ) {
         val velocityPlayer = player.velocityPlayer() ?: return
-        val addPlayerPacket = WrapperPlayServerPlayerInfoUpdate(
-            EnumSet.of(
-                WrapperPlayServerPlayerInfoUpdate.Action.ADD_PLAYER,
-                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_DISPLAY_NAME,
-                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LISTED,
-                WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_LATENCY
-            ),
-            WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
-                UserProfile(
-                    entry.associatedPlayer, "fake-${entry.associatedPlayer}"
-                ),
-                true,
-                entry.ping,
-                entry.gameMode.toPeGameMode(),
-                entry.display,
-                null,
-                0
-            )
-        )
+        val targetPlayer = plugin.proxy.getPlayer(entry.profile.uuid).getOrNull() ?: return
 
-        val teamName = "${entry.weight}-${entry.associatedName}"
-
-        val teamPacket = WrapperPlayServerTeams(
-            teamName,
-            WrapperPlayServerTeams.TeamMode.CREATE,
-            WrapperPlayServerTeams.ScoreBoardTeamInfo(
-                Component.text(entry.associatedName),
-                null,
-                null,
-                WrapperPlayServerTeams.NameTagVisibility.ALWAYS,
-                WrapperPlayServerTeams.CollisionRule.ALWAYS,
-                NamedTextColor.RED,
-                WrapperPlayServerTeams.OptionData.NONE
-            ),
-            entry.associatedName
+        velocityPlayer.tabList.addEntry(
+            TabListEntry.builder()
+                .tabList(targetPlayer.tabList)
+                .profile(targetPlayer.gameProfile)
+                .displayName(entry.display)
+                .latency(targetPlayer.ping.toInt())
+                .gameMode(TabGameMode.CREATIVE.index)
+                .listed(true)
+                .listOrder(entry.weight)
+                .showHat(true)
+                .build()
         )
-        val teamUpdatePacket = WrapperPlayServerTeams(
-            teamName,
-            WrapperPlayServerTeams.TeamMode.UPDATE,
-            WrapperPlayServerTeams.ScoreBoardTeamInfo(
-                entry.display,
-                null,
-                null,
-                WrapperPlayServerTeams.NameTagVisibility.ALWAYS,
-                WrapperPlayServerTeams.CollisionRule.ALWAYS,
-                NamedTextColor.RED,
-                WrapperPlayServerTeams.OptionData.NONE
-            ),
-            entry.associatedName
-        )
-        val nullInfo: WrapperPlayServerTeams.ScoreBoardTeamInfo? = null
-
-        val teamAddPacket = WrapperPlayServerTeams(
-            teamName,
-            WrapperPlayServerTeams.TeamMode.ADD_ENTITIES,
-            nullInfo,
-            entry.associatedName
-        )
-
-        PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, addPlayerPacket)
-        PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, teamPacket)
-        PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, teamUpdatePacket)
-        PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, teamAddPacket)
     }
 
     override fun hideEntry(
         player: TabPlayer,
-        entry: TabEntry
+        entry: UUID
     ) {
         val velocityPlayer = player.velocityPlayer() ?: return
-        val removePlayerPacket = WrapperPlayServerPlayerInfoRemove(
-            entry.associatedPlayer
-        )
-
-        PacketEvents.getAPI().playerManager.sendPacket(velocityPlayer, removePlayerPacket)
+        velocityPlayer.tabList.removeEntry(entry)
     }
 
     override fun updateEntry(
