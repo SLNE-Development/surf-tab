@@ -10,7 +10,7 @@ import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.util.tabPlayer
 
 fun CommandAPICommand.surfTabRefreshCommand() = subcommand("refresh") {
-    withPermission(TabPermissions.COMMAND_TAB_RELOAD)
+    withPermission(TabPermissions.COMMAND_TAB_REFRESH)
     anyExecutor { executor, _ ->
         plugin.proxy.allPlayers.forEach {
             tabService.sendTablistUpdate(it.tabPlayer())
