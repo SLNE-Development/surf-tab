@@ -18,8 +18,8 @@ interface TabService {
     fun showEntries(player: TabPlayer, entries: ObjectSet<TabEntry>) =
         entries.forEach { showEntry(player, it) }
 
-    fun hideEntry(player: TabPlayer, entry: TabEntry)
-    fun hideEntries(player: TabPlayer, entries: ObjectSet<TabEntry>) =
+    fun hideEntry(player: TabPlayer, entry: UUID)
+    fun hideEntries(player: TabPlayer, entries: ObjectSet<UUID>) =
         entries.forEach { hideEntry(player, it) }
 
     fun updateEntry(player: TabPlayer, associatedWithEntry: UUID)
