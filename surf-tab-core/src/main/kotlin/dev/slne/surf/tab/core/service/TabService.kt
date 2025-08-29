@@ -22,9 +22,13 @@ interface TabService {
     fun hideEntries(player: TabPlayer, entries: ObjectSet<UUID>) =
         entries.forEach { hideEntry(player, it) }
 
-    fun updateEntry(player: TabPlayer, associatedWithEntry: UUID)
-    fun updateEntries(player: TabPlayer, associatedWithEntries: ObjectSet<UUID>) =
-        associatedWithEntries.forEach { updateEntry(player, it) }
+    fun updateEntry(player: TabPlayer, associatedWithEntry: UUID, block: (TabEntry) -> Unit)
+    fun updateEntries(
+        player: TabPlayer,
+        associatedWithEntries: ObjectSet<UUID>,
+        block: (TabEntry) -> Unit
+    ) =
+        associatedWithEntries.forEach { updateEntry(player, it, block) }
 
     companion object {
         val INSTANCE = requiredService<TabService>()

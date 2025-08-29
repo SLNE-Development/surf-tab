@@ -5,7 +5,10 @@ import dev.jorel.commandapi.kotlindsl.anyExecutor
 import dev.jorel.commandapi.kotlindsl.subcommand
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import dev.slne.surf.tab.core.TabPermissions
+import dev.slne.surf.tab.core.service.tabService
+import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.tabConfig
+import dev.slne.surf.tab.velocity.util.tabPlayer
 import kotlin.system.measureTimeMillis
 
 fun CommandAPICommand.surfTabReloadCommand() = subcommand("reload") {
@@ -17,6 +20,9 @@ fun CommandAPICommand.surfTabReloadCommand() = subcommand("reload") {
 
             val ms = measureTimeMillis {
                 tabConfig.reload()
+                plugin.proxy.allPlayers.forEach {
+                    tabService.sendTablistUpdate(it.tabPlayer())
+                }
             }
 
             executor.sendText {

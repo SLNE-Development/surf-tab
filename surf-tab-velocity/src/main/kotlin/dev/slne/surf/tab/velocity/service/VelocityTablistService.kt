@@ -3,6 +3,7 @@ package dev.slne.surf.tab.velocity.service
 import com.google.auto.service.AutoService
 import com.velocitypowered.api.proxy.player.TabListEntry
 import dev.slne.surf.surfapi.core.api.util.logger
+import dev.slne.surf.surfapi.core.api.util.toObjectSet
 import dev.slne.surf.tab.api.TabDisplayMode
 import dev.slne.surf.tab.api.TabEntry
 import dev.slne.surf.tab.api.player.TabGameMode
@@ -12,10 +13,7 @@ import dev.slne.surf.tab.core.service.TabService
 import dev.slne.surf.tab.core.service.luckPermsService
 import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.tabConfig
-import dev.slne.surf.tab.velocity.util.formatWithAdventure
-import dev.slne.surf.tab.velocity.util.tabPlayer
-import dev.slne.surf.tab.velocity.util.toTabProfile
-import dev.slne.surf.tab.velocity.util.velocityPlayer
+import dev.slne.surf.tab.velocity.util.*
 import net.kyori.adventure.util.Services
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
@@ -37,14 +35,13 @@ class VelocityTablistService : TabService, Services.Fallback {
 
     override fun sendFakeTablist(player: TabPlayer) {
         val velocityPlayer = player.velocityPlayer() ?: return
-        val tabMode = tabConfig.config().displayMode
 
         when (tabMode) {
             TabDisplayMode.PER_PLAYER -> {
                 showEntry(
                     player, TabEntryImpl(
                         velocityPlayer.gameProfile.toTabProfile(),
-                        tabConfig.config().displayName.formatWithAdventure(
+                        display.formatWithAdventure(
                             velocityPlayer,
                             velocityPlayer
                         ),
@@ -55,58 +52,61 @@ class VelocityTablistService : TabService, Services.Fallback {
                 )
             }
 
-            TabDisplayMode.PER_WORLD -> logger().atWarning()
-                .log("TabDisplayMode PER_WORLD is not supported on Velocity!")
-
             TabDisplayMode.PER_SERVER -> {
                 val server = velocityPlayer.currentServer.getOrNull()?.server ?: return
-                server.playersConnected.forEach { online ->
+
+                showEntries(player, server.playersConnected.map {
+                    val profile = it.gameProfile.toTabProfile()
                     val display =
-                        tabConfig.config().displayName.formatWithAdventure(online, velocityPlayer)
+                        display.formatWithAdventure(it, velocityPlayer)
+                    val gameMode = TabGameMode.CREATIVE
+                    val ping = it.ping.toInt()
+                    val weight = luckPermsService.getWeight(it.tabPlayer())
 
-                    val entry = TabEntryImpl(
-                        online.gameProfile.toTabProfile(),
+                    TabEntryImpl(
+                        profile,
                         display,
-                        TabGameMode.CREATIVE,
-                        online.ping.toInt(),
-                        luckPermsService.getWeight(online.tabPlayer())
+                        gameMode,
+                        ping,
+                        weight
                     )
-
-                    showEntry(player, entry)
-                }
+                }.toObjectSet())
             }
 
             TabDisplayMode.PER_PROXY -> {
-                plugin.proxy.allPlayers.forEach { online ->
+                showEntries(player, plugin.proxy.allPlayers.map {
+                    val profile = it.gameProfile.toTabProfile()
                     val display =
-                        tabConfig.config().displayName.formatWithAdventure(online, velocityPlayer)
+                        display.formatWithAdventure(it, velocityPlayer)
+                    val gameMode = TabGameMode.CREATIVE
+                    val ping = it.ping.toInt()
+                    val weight = luckPermsService.getWeight(it.tabPlayer())
 
-                    val entry = TabEntryImpl(
-                        online.gameProfile.toTabProfile(),
+                    TabEntryImpl(
+                        profile,
                         display,
-                        TabGameMode.CREATIVE, online.ping.toInt(),
-                        luckPermsService.getWeight(online.tabPlayer())
+                        gameMode,
+                        ping,
+                        weight
                     )
-
-                    showEntry(player, entry)
-                }
+                }.toObjectSet())
             }
 
-            TabDisplayMode.CLOUD_GLOBAL -> logger().atWarning()
-                .log("TabDisplayMode CLOUD_GLOBAL is not supported on Velocity!")
+            TabDisplayMode.CLOUD_GLOBAL, TabDisplayMode.PER_WORLD -> logger().atWarning()
+                .log("TabDisplayMode $tabMode are not supported on Velocity!")
         }
     }
 
     override fun sendHeader(player: TabPlayer) {
         val velocityPlayer = player.velocityPlayer() ?: return
-        val header = tabConfig.config().header.formatWithAdventure(velocityPlayer)
+        val header = header.formatWithAdventure(velocityPlayer)
 
         velocityPlayer.sendPlayerListHeader(header)
     }
 
     override fun sendFooter(player: TabPlayer) {
         val velocityPlayer = player.velocityPlayer() ?: return
-        val footer = tabConfig.config().footer.formatWithAdventure(velocityPlayer)
+        val footer = footer.formatWithAdventure(velocityPlayer)
 
         velocityPlayer.sendPlayerListFooter(footer)
     }
@@ -142,8 +142,19 @@ class VelocityTablistService : TabService, Services.Fallback {
 
     override fun updateEntry(
         player: TabPlayer,
-        associatedWithEntry: UUID
+        associatedWithEntry: UUID,
+        block: (TabEntry) -> Unit
     ) {
-
+        val entry =
+            player.velocityPlayer()?.tabList?.entries?.find { it.profile.id == associatedWithEntry }
+                ?.toTabEntry()
+                ?: return
+        hideEntry(player, associatedWithEntry)
+        showEntry(player, entry.apply(block))
     }
+
+    val header get() = tabConfig.config().header
+    val footer get() = tabConfig.config().footer
+    val display get() = tabConfig.config().displayName
+    val tabMode get() = tabConfig.config().displayMode
 }
