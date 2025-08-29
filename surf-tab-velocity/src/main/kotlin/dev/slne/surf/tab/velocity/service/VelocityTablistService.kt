@@ -1,6 +1,7 @@
 package dev.slne.surf.tab.velocity.service
 
 import com.google.auto.service.AutoService
+import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.player.TabListEntry
 import dev.slne.surf.surfapi.core.api.util.logger
 import dev.slne.surf.surfapi.core.api.util.toObjectSet
@@ -11,6 +12,7 @@ import dev.slne.surf.tab.api.player.TabPlayer
 import dev.slne.surf.tab.core.model.TabEntryImpl
 import dev.slne.surf.tab.core.service.TabService
 import dev.slne.surf.tab.core.service.luckPermsService
+import dev.slne.surf.tab.core.service.tabGroupService
 import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.tabConfig
 import dev.slne.surf.tab.velocity.util.*
@@ -37,64 +39,97 @@ class VelocityTablistService : TabService, Services.Fallback {
         val velocityPlayer = player.velocityPlayer() ?: return
 
         when (tabMode) {
-            TabDisplayMode.PER_PLAYER -> {
-                showEntry(
-                    player, TabEntryImpl(
-                        velocityPlayer.gameProfile.toTabProfile(),
-                        display.formatWithAdventure(
-                            velocityPlayer,
-                            velocityPlayer
-                        ),
-                        TabGameMode.CREATIVE,
-                        velocityPlayer.ping.toInt(),
-                        luckPermsService.getWeight(velocityPlayer.tabPlayer())
-                    )
-                )
-            }
+            TabDisplayMode.PER_PLAYER -> sendPlayerTablist(player, velocityPlayer)
+            TabDisplayMode.PER_SERVER -> sendServerTablist(player, velocityPlayer)
+            TabDisplayMode.PER_PROXY -> sendProxyTablist(player, velocityPlayer)
+            TabDisplayMode.PER_PROXY_WITH_GROUPS -> sendPerProxyWithGroupsTablist(
+                player,
+                velocityPlayer
+            )
 
-            TabDisplayMode.PER_SERVER -> {
-                val server = velocityPlayer.currentServer.getOrNull()?.server ?: return
-
-                showEntries(player, server.playersConnected.map {
-                    val profile = it.gameProfile.toTabProfile()
-                    val display =
-                        display.formatWithAdventure(it, velocityPlayer)
-                    val gameMode = TabGameMode.CREATIVE
-                    val ping = it.ping.toInt()
-                    val weight = luckPermsService.getWeight(it.tabPlayer())
-
-                    TabEntryImpl(
-                        profile,
-                        display,
-                        gameMode,
-                        ping,
-                        weight
-                    )
-                }.toObjectSet())
-            }
-
-            TabDisplayMode.PER_PROXY -> {
-                showEntries(player, plugin.proxy.allPlayers.map {
-                    val profile = it.gameProfile.toTabProfile()
-                    val display =
-                        display.formatWithAdventure(it, velocityPlayer)
-                    val gameMode = TabGameMode.CREATIVE
-                    val ping = it.ping.toInt()
-                    val weight = luckPermsService.getWeight(it.tabPlayer())
-
-                    TabEntryImpl(
-                        profile,
-                        display,
-                        gameMode,
-                        ping,
-                        weight
-                    )
-                }.toObjectSet())
-            }
-
-            TabDisplayMode.CLOUD_GLOBAL, TabDisplayMode.PER_WORLD -> logger().atWarning()
+            TabDisplayMode.CLOUD_GLOBAL, TabDisplayMode.PER_WORLD, TabDisplayMode.CLOUD_GLOBAL_WITH_GROUPS -> logger().atWarning()
                 .log("TabDisplayMode $tabMode are not supported on Velocity!")
         }
+    }
+
+    fun sendPerProxyWithGroupsTablist(player: TabPlayer, velocityPlayer: Player) {
+        val group = tabGroupService.getGroupForPlayer(player.uniqueId) ?: run {
+            sendServerTablist(player, velocityPlayer)
+            return
+        }
+
+        showEntries(player, group.retrievePlayers().mapNotNull {
+            val velocityGroupPlayer = it.velocityPlayer() ?: return@mapNotNull null
+            val profile = velocityGroupPlayer.gameProfile.toTabProfile()
+            val display =
+                display.formatWithAdventure(velocityGroupPlayer, velocityPlayer)
+            val gameMode = TabGameMode.CREATIVE
+            val ping = velocityGroupPlayer.ping.toInt()
+            val weight = luckPermsService.getWeight(it)
+
+            TabEntryImpl(
+                profile,
+                display,
+                gameMode,
+                ping,
+                weight
+            )
+        }.toObjectSet())
+    }
+
+    fun sendPlayerTablist(player: TabPlayer, velocityPlayer: Player) {
+        showEntry(
+            player, TabEntryImpl(
+                velocityPlayer.gameProfile.toTabProfile(),
+                display.formatWithAdventure(
+                    velocityPlayer,
+                    velocityPlayer
+                ),
+                TabGameMode.CREATIVE,
+                velocityPlayer.ping.toInt(),
+                luckPermsService.getWeight(velocityPlayer.tabPlayer())
+            )
+        )
+    }
+
+    fun sendServerTablist(player: TabPlayer, velocityPlayer: Player) {
+        val server = velocityPlayer.currentServer.getOrNull()?.server ?: return
+
+        showEntries(player, server.playersConnected.map {
+            val profile = it.gameProfile.toTabProfile()
+            val display =
+                display.formatWithAdventure(it, velocityPlayer)
+            val gameMode = TabGameMode.CREATIVE
+            val ping = it.ping.toInt()
+            val weight = luckPermsService.getWeight(it.tabPlayer())
+
+            TabEntryImpl(
+                profile,
+                display,
+                gameMode,
+                ping,
+                weight
+            )
+        }.toObjectSet())
+    }
+
+    fun sendProxyTablist(player: TabPlayer, velocityPlayer: Player) {
+        showEntries(player, plugin.proxy.allPlayers.map {
+            val profile = it.gameProfile.toTabProfile()
+            val display =
+                display.formatWithAdventure(it, velocityPlayer)
+            val gameMode = TabGameMode.CREATIVE
+            val ping = it.ping.toInt()
+            val weight = luckPermsService.getWeight(it.tabPlayer())
+
+            TabEntryImpl(
+                profile,
+                display,
+                gameMode,
+                ping,
+                weight
+            )
+        }.toObjectSet())
     }
 
     override fun sendHeader(player: TabPlayer) {

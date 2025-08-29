@@ -5,5 +5,7 @@ enum class TabDisplayMode {
     PER_WORLD,
     PER_SERVER,
     PER_PROXY,
-    CLOUD_GLOBAL
+    PER_PROXY_WITH_GROUPS,
+    CLOUD_GLOBAL,
+    CLOUD_GLOBAL_WITH_GROUPS
 }

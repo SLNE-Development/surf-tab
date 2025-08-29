@@ -8,6 +8,7 @@ import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
 import dev.slne.surf.tab.core.service.luckPermsService
+import dev.slne.surf.tab.core.service.tabGroupService
 import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.config.TabConfigProvider
 import dev.slne.surf.tab.velocity.config.TabGroupConfigProvider
@@ -28,6 +29,8 @@ class VelocityMain @Inject constructor(
     fun onInitialization(event: ProxyInitializeEvent) {
         INSTANCE = this
         surfTabCommand()
+
+        tabGroupService.loadGroups(true)
 
         luckPermsService.registerListener()
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
