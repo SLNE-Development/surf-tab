@@ -5,7 +5,7 @@ import dev.slne.surf.tab.api.player.TabPlayer
 import java.util.UUID
 
 interface TabPlayerRegistry {
-    fun getTabPlayer(uuid: UUID): TabPlayer?
+    fun getTabPlayer(uuid: UUID): TabPlayer
 
     companion object {
         val INSTANCE = requiredService<TabPlayerRegistry>()

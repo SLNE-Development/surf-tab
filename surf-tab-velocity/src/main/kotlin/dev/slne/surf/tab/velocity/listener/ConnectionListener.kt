@@ -14,7 +14,7 @@ class ConnectionListener {
     @Subscribe
     fun onConnect(event: ServerPostConnectEvent) {
         container.launch(Dispatchers.IO) {
-            delay(50)
+            delay(1000L)
 
             plugin.proxy.allPlayers.forEach {
                 tabService.sendTablistUpdate(it.tabPlayer())

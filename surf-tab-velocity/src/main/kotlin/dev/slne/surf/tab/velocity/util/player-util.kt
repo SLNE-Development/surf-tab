@@ -8,12 +8,12 @@ import dev.slne.surf.tab.api.auth.TabGameProfile
 import dev.slne.surf.tab.api.auth.TabProperty
 import dev.slne.surf.tab.api.player.TabGameMode
 import dev.slne.surf.tab.api.player.TabPlayer
-import dev.slne.surf.tab.core.factory.tabPlayerFactory
 import dev.slne.surf.tab.core.model.TabEntryImpl
+import dev.slne.surf.tab.core.registry.tabPlayerRegistry
 import dev.slne.surf.tab.velocity.plugin
 import kotlin.jvm.optionals.getOrNull
 
-fun Player.tabPlayer() = tabPlayerFactory.createPlayer(this)
+fun Player.tabPlayer() = tabPlayerRegistry.getTabPlayer(this.uniqueId)
 fun TabPlayer.velocityPlayer() = plugin.proxy.getPlayer(this.uniqueId).getOrNull()
 
 fun GameProfile.toTabProfile() = TabGameProfile(

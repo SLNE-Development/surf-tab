@@ -14,12 +14,13 @@ import kotlin.jvm.optionals.getOrNull
 
 @AutoService(TabPlayerRegistry::class)
 class FallbackTabPlayerRegistry : TabPlayerRegistry, Services.Fallback {
-    val playerCache: LoadingCache<UUID, TabPlayer?> = Caffeine.newBuilder()
+    val playerCache: LoadingCache<UUID, TabPlayer> = Caffeine.newBuilder()
         .expireAfterWrite(20L, TimeUnit.MINUTES)
         .build {
-            val velocityPlayer = plugin.proxy.getPlayer(it).getOrNull() ?: return@build null
+            val velocityPlayer = plugin.proxy.getPlayer(it).getOrNull()
+                ?: return@build tabPlayerFactory.createPlayer("Unknown", it)
             tabPlayerFactory.createPlayer(velocityPlayer)
         }
 
-    override fun getTabPlayer(uuid: UUID) = playerCache[uuid]
+    override fun getTabPlayer(uuid: UUID): TabPlayer = playerCache[uuid]
 }
