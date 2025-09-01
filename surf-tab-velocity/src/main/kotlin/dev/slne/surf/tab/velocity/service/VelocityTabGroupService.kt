@@ -10,7 +10,6 @@ import dev.slne.surf.tab.core.model.TabGroupImpl
 import dev.slne.surf.tab.core.model.TabServerImpl
 import dev.slne.surf.tab.core.service.TabGroupService
 import dev.slne.surf.tab.velocity.plugin
-import dev.slne.surf.tab.velocity.tabGroupConfig
 import dev.slne.surf.tab.velocity.util.tabPlayer
 import it.unimi.dsi.fastutil.objects.ObjectSet
 import net.kyori.adventure.util.Services
@@ -22,7 +21,7 @@ class VelocityTabGroupService : TabGroupService, Services.Fallback {
     private val groups: ObjectSet<TabGroup> = mutableObjectSetOf()
     override fun loadGroups(notify: Boolean) {
         groups.clear()
-        groups.addAll(tabGroupConfig.config.groups.map {
+        groups.addAll(dev.slne.surf.tab.velocity.config.tabGroupConfig.groups.map {
             TabGroupImpl(
                 it.name,
                 it.velocityServers.map { svr ->

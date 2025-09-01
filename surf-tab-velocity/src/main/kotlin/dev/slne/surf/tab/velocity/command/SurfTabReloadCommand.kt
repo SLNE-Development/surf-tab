@@ -8,8 +8,8 @@ import dev.slne.surf.tab.core.TabPermissions
 import dev.slne.surf.tab.core.service.tabGroupService
 import dev.slne.surf.tab.core.service.tabService
 import dev.slne.surf.tab.velocity.plugin
-import dev.slne.surf.tab.velocity.tabConfig
-import dev.slne.surf.tab.velocity.tabGroupConfig
+import dev.slne.surf.tab.velocity.tabConfigProvider
+import dev.slne.surf.tab.velocity.tabGroupConfigProvider
 import dev.slne.surf.tab.velocity.util.tabPlayer
 import kotlin.system.measureTimeMillis
 
@@ -21,8 +21,8 @@ fun CommandAPICommand.surfTabReloadCommand() = subcommand("reload") {
             info("Das Plugin wird neu geladen...")
 
             val ms = measureTimeMillis {
-                tabConfig.reload()
-                tabGroupConfig.reload()
+                tabConfigProvider.reload()
+                tabGroupConfigProvider.reload()
                 tabGroupService.loadGroups(false)
                 plugin.proxy.allPlayers.forEach {
                     tabService.sendTablistUpdate(it.tabPlayer())

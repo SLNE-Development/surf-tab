@@ -18,13 +18,18 @@ class TabConfigProvider {
 
     fun reload() {
         configManager.reloadFromFile()
+        this.validateConfiguration()
+    }
 
-        if (config().displayMode == TabDisplayMode.CLOUD_GLOBAL || config().displayMode == TabDisplayMode.PER_WORLD) {
+    private fun validateConfiguration() {
+        if (config.displayMode == TabDisplayMode.CLOUD_GLOBAL || config.displayMode == TabDisplayMode.PER_WORLD) {
             logger().atWarning()
-                .log("TabDisplayMode ${config().displayMode} is not supported on Velocity, switching to PER_PROXY")
+                .log("TabDisplayMode ${config.displayMode} is not supported on Velocity, switching to PER_PROXY")
             configManager.config = configManager.config.copy(displayMode = TabDisplayMode.PER_PROXY)
         }
     }
 
-    fun config() = configManager.config
+    val config get() = configManager.config
 }
+
+val tabConfig get() = TabConfigProvider().config

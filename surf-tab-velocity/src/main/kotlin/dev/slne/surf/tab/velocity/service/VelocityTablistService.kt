@@ -13,8 +13,8 @@ import dev.slne.surf.tab.core.model.TabEntryImpl
 import dev.slne.surf.tab.core.service.TabService
 import dev.slne.surf.tab.core.service.luckPermsService
 import dev.slne.surf.tab.core.service.tabGroupService
+import dev.slne.surf.tab.velocity.config.tabConfig
 import dev.slne.surf.tab.velocity.plugin
-import dev.slne.surf.tab.velocity.tabConfig
 import dev.slne.surf.tab.velocity.util.*
 import net.kyori.adventure.util.Services
 import java.util.*
@@ -188,8 +188,8 @@ class VelocityTablistService : TabService, Services.Fallback {
         showEntry(player, entry.apply(block))
     }
 
-    val header get() = tabConfig.config().header
-    val footer get() = tabConfig.config().footer
-    val display get() = tabConfig.config().displayName
-    val tabMode get() = tabConfig.config().displayMode
+    val header get() = tabConfig.header
+    val footer get() = tabConfig.footer
+    val display get() = tabConfig.displayName
+    val tabMode get() = tabConfig.displayMode
 }

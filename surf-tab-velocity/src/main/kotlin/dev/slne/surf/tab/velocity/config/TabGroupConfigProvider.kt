@@ -24,3 +24,5 @@ class TabGroupConfigProvider {
 
     val config get() = configManager.config
 }
+
+val tabGroupConfig get() = TabGroupConfigProvider().config

@@ -45,5 +45,5 @@ class VelocityMain @Inject constructor(
 val plugin get() = VelocityMain.INSTANCE
 val container = VelocityMain.INSTANCE.pluginContainer
 
-val tabConfig = TabConfigProvider()
-val tabGroupConfig = TabGroupConfigProvider()
+val tabConfigProvider = TabConfigProvider()
+val tabGroupConfigProvider = TabGroupConfigProvider()
