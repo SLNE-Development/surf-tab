@@ -5,3 +5,7 @@ plugins {
 surfCoreApi {
     withCloudCommon()
 }
+
+dependencies {
+    api(project(":surf-tab-api"))
+}
