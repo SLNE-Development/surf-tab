@@ -23,11 +23,11 @@ import kotlin.jvm.optionals.getOrNull
 @AutoService(TabService::class)
 class VelocityTablistService : TabService, Services.Fallback {
     override fun sendTablistUpdate(player: TabPlayer) {
-        sendHeader(player)
-        sendFooter(player)
+        this.sendHeader(player)
+        this.sendFooter(player)
 
-        clearActualTablist(player)
-        sendFakeTablist(player)
+        this.clearActualTablist(player)
+        this.sendFakeTablist(player)
     }
 
     override fun clearActualTablist(player: TabPlayer) {
@@ -52,7 +52,7 @@ class VelocityTablistService : TabService, Services.Fallback {
         }
     }
 
-    fun sendPerProxyWithGroupsTablist(player: TabPlayer, velocityPlayer: Player) {
+    private fun sendPerProxyWithGroupsTablist(player: TabPlayer, velocityPlayer: Player) {
         val group = tabGroupService.getGroupForPlayer(player.uniqueId) ?: run {
             sendServerTablist(player, velocityPlayer)
             return
@@ -77,7 +77,7 @@ class VelocityTablistService : TabService, Services.Fallback {
         }.toObjectSet())
     }
 
-    fun sendPlayerTablist(player: TabPlayer, velocityPlayer: Player) {
+    private fun sendPlayerTablist(player: TabPlayer, velocityPlayer: Player) {
         showEntry(
             player, TabEntryImpl(
                 velocityPlayer.gameProfile.toTabProfile(),
@@ -92,7 +92,7 @@ class VelocityTablistService : TabService, Services.Fallback {
         )
     }
 
-    fun sendServerTablist(player: TabPlayer, velocityPlayer: Player) {
+    private fun sendServerTablist(player: TabPlayer, velocityPlayer: Player) {
         val server = velocityPlayer.currentServer.getOrNull()?.server ?: return
 
         showEntries(player, server.playersConnected.map {
@@ -113,7 +113,7 @@ class VelocityTablistService : TabService, Services.Fallback {
         }.toObjectSet())
     }
 
-    fun sendProxyTablist(player: TabPlayer, velocityPlayer: Player) {
+    private fun sendProxyTablist(player: TabPlayer, velocityPlayer: Player) {
         showEntries(player, plugin.proxy.allPlayers.map {
             val profile = it.gameProfile.toTabProfile()
             val display =
