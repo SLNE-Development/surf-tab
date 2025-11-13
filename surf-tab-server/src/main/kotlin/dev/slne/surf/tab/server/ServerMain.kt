@@ -11,7 +11,6 @@ class ServerMain : StandalonePlugin() {
     }
 
     override suspend fun enable() {
-        log.atInfo().log("")
     }
 
     override suspend fun disable() {
