@@ -6,7 +6,6 @@ import dev.jorel.commandapi.kotlindsl.subcommand
 import dev.slne.surf.cloud.api.client.netty.packet.fireAndForget
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import dev.slne.surf.tab.core.TabPermissions
-import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundRequestTablistUpdatePacket
 
 fun CommandAPICommand.surfTabRefreshCommand() = subcommand("refresh") {
     withPermission(TabPermissions.COMMAND_TAB_REFRESH)

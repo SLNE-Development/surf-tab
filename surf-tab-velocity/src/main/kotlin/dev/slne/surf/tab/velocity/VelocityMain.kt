@@ -12,15 +12,13 @@ import dev.slne.surf.cloud.api.common.startSpringApplication
 import dev.slne.surf.tab.SurfTablistApplication
 import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.listener.ConnectionListener
-import dev.slne.surf.tab.velocity.service.VelocitySyncService
 import java.nio.file.Path
 
 class VelocityMain @Inject constructor(
     val proxy: ProxyServer,
     @param:DataDirectory val dataPath: Path,
     suspendingPluginContainer: SuspendingPluginContainer,
-    val pluginContainer: PluginContainer,
-    private val syncService: VelocitySyncService
+    val pluginContainer: PluginContainer
 ) {
     init {
         suspendingPluginContainer.initialize(this)
