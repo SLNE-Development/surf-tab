@@ -21,7 +21,7 @@ class VelocityPacketListener(
     @SurfNettyPacketHandler
     fun handleRemovePacket(packet: ClientboundTablistRemovePacket) {
         plugin.proxy.allPlayers.mapNotNull { CloudPlayer[it.uniqueId] }.forEach {
-            tablistService.removePlayer(it, packet.profileName)
+            tablistService.removePlayer(it, packet.uuid)
         }
     }
 

@@ -8,6 +8,7 @@ import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.api.entry.TabGameMode
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistAddPacket
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistAdditionsPacket
+import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistRemovePacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAddPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAdditionsPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistRemovePacket
@@ -37,23 +38,12 @@ class ServerPacketListener {
     }
 
     @SurfNettyPacketHandler
-    suspend fun handleRemovePacket(packet: ServerboundTablistRemovePacket) {
-        val profile = packet.profile
-        val cloudPlayer = CloudPlayer[profile.uuid] ?: return
-        val luckpermsMetaWeight = cloudPlayer.getLuckpermsMetaData("weight")?.toIntOrNull() ?: 0
-
-        ClientboundTablistAddPacket(
-            TabEntry(
-                profile = profile,
-                displayName = text(profile.name, NamedTextColor.WHITE),
-                gameMode = TabGameMode.SURVIVAL,
-                ping = 0,
-                weight = luckpermsMetaWeight
-            )
+    suspend fun handleRemovePacket(packet: ServerboundTablistRemovePacket) =
+        ClientboundTablistRemovePacket(
+            packet.uuid
         ).broadcast {
             getSeenServers(packet.senderServer.name).contains(it.hostname)
         }
-    }
 
     @SurfNettyPacketHandler
     fun handleAdditionsPacket(packet: ServerboundTablistAdditionsPacket) {

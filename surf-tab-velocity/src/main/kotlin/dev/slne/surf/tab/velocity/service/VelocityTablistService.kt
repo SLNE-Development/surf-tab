@@ -6,6 +6,7 @@ import dev.slne.surf.tab.velocity.util.currentPlatform
 import dev.slne.surf.tab.velocity.util.formatWithAdventure
 import dev.slne.surf.tab.velocity.util.toVelocity
 import org.springframework.stereotype.Component
+import java.util.*
 
 @Component
 class VelocityTablistService {
@@ -13,12 +14,10 @@ class VelocityTablistService {
         val velocityPlayer = viewer.currentPlatform
         velocityPlayer.tabList.addEntry(entry.toVelocity(velocityPlayer.tabList))
     }
-    
-    fun removePlayer(viewer: CloudPlayer, entryName: String) {
+
+    fun removePlayer(viewer: CloudPlayer, entryUuid: UUID) {
         val velocityPlayer = viewer.currentPlatform
-        velocityPlayer.tabList.entries.firstOrNull { it.profile.name == entryName }?.let {
-            velocityPlayer.tabList.removeEntry(it.profile.id)
-        }
+        velocityPlayer.tabList.removeEntry(entryUuid)
     }
 
     fun sendAdditions(player: CloudPlayer, header: String, footer: String) {
