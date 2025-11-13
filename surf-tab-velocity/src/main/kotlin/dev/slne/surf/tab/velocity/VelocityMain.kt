@@ -7,43 +7,38 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
-import dev.slne.surf.tab.core.service.luckPermsService
-import dev.slne.surf.tab.core.service.tabGroupService
+import dev.slne.surf.cloud.api.common.CloudInstance
+import dev.slne.surf.cloud.api.common.startSpringApplication
+import dev.slne.surf.tab.SurfTablistApplication
 import dev.slne.surf.tab.velocity.command.surfTabCommand
-import dev.slne.surf.tab.velocity.config.TabConfigProvider
-import dev.slne.surf.tab.velocity.config.TabGroupConfigProvider
 import dev.slne.surf.tab.velocity.listener.ConnectionListener
+import dev.slne.surf.tab.velocity.service.VelocitySyncService
 import java.nio.file.Path
 
 class VelocityMain @Inject constructor(
     val proxy: ProxyServer,
-    val pluginContainer: PluginContainer,
     @param:DataDirectory val dataPath: Path,
-    suspendingPluginContainer: SuspendingPluginContainer
+    suspendingPluginContainer: SuspendingPluginContainer,
+    val pluginContainer: PluginContainer,
+    private val syncService: VelocitySyncService
 ) {
     init {
         suspendingPluginContainer.initialize(this)
+        CloudInstance.startSpringApplication(SurfTablistApplication::class)
     }
 
     @Subscribe
     fun onInitialization(event: ProxyInitializeEvent) {
-        INSTANCE = this
+        instance = this
         surfTabCommand()
 
-        tabGroupService.loadGroups(true)
-
-        luckPermsService.registerListener()
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
     }
 
     companion object {
-        lateinit var INSTANCE: VelocityMain
-            private set
+        lateinit var instance: VelocityMain
     }
 }
 
-val plugin get() = VelocityMain.INSTANCE
-val container = VelocityMain.INSTANCE.pluginContainer
-
-val tabConfigProvider = TabConfigProvider()
-val tabGroupConfigProvider = TabGroupConfigProvider()
+val plugin get() = VelocityMain.instance
+val container = VelocityMain.instance.pluginContainer

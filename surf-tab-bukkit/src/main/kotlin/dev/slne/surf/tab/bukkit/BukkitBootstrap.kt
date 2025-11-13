@@ -2,8 +2,8 @@ package dev.slne.surf.tab.bukkit
 
 import dev.slne.surf.cloud.api.common.CloudInstance
 import dev.slne.surf.cloud.api.common.startSpringApplication
+import dev.slne.surf.tab.SurfTablistApplication
 import dev.slne.surf.tab.core.common.ContextHolderImpl
-import dev.slne.surf.tab.core.common.SurfTablistApplication
 import io.papermc.paper.plugin.bootstrap.BootstrapContext
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap
 

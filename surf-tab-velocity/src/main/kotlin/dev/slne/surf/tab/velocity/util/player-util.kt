@@ -1,36 +1,27 @@
 package dev.slne.surf.tab.velocity.util
 
-import com.velocitypowered.api.proxy.Player
+import com.velocitypowered.api.proxy.player.TabList
 import com.velocitypowered.api.proxy.player.TabListEntry
 import com.velocitypowered.api.util.GameProfile
-import dev.slne.surf.surfapi.core.api.util.toObjectSet
-import dev.slne.surf.tab.api.auth.TabGameProfile
-import dev.slne.surf.tab.api.auth.TabProperty
-import dev.slne.surf.tab.api.player.TabGameMode
-import dev.slne.surf.tab.api.player.TabPlayer
-import dev.slne.surf.tab.core.model.TabEntryImpl
-import dev.slne.surf.tab.core.registry.tabPlayerRegistry
+import dev.slne.surf.cloud.api.common.player.CloudPlayer
+import dev.slne.surf.tab.api.entry.TabEntry
+import dev.slne.surf.tab.api.entry.TabProfile
 import dev.slne.surf.tab.velocity.plugin
-import kotlin.jvm.optionals.getOrNull
 
-fun Player.tabPlayer() = tabPlayerRegistry.getTabPlayer(this.uniqueId)
-fun TabPlayer.velocityPlayer() = plugin.proxy.getPlayer(this.uniqueId).getOrNull()
-
-fun GameProfile.toTabProfile() = TabGameProfile(
-    this.id,
-    this.name,
-    this.properties.map { TabProperty(it.name, it.value, it.signature) }.toObjectSet()
-)
-
-fun TabGameProfile.toGameProfile() = GameProfile(this.uuid, this.name, this.properties.map {
+fun TabProfile.toGameProfile() = GameProfile(this.uuid, this.name, this.properties.map {
     GameProfile.Property(it.name, it.value, it.signature)
 })
 
-fun TabListEntry.toTabEntry() = TabEntryImpl(
-    this.profile.toTabProfile(),
-    this.displayNameComponent.getOrNull() ?: error("Display name is not present"),
-    TabGameMode.entries.find { it.index == this.gameMode }
-        ?: error("Unknown game mode: ${this.gameMode}"),
-    this.latency,
-    this.listOrder
-)
+fun TabEntry.toVelocity(tablist: TabList): TabListEntry = TabListEntry
+    .builder()
+    .tabList(tablist)
+    .profile(this.profile.toGameProfile())
+    .displayName(this.displayName)
+    .latency(this.ping)
+    .listed(true)
+    .listOrder(this.weight)
+    .showHat(true)
+    .gameMode(this.gameMode.id)
+    .build()
+
+val CloudPlayer.currentPlatform get() = plugin.proxy.getPlayer(this.uuid).get()
