@@ -24,7 +24,7 @@ class ConnectionListener {
     @Subscribe
     fun onDisconnect(event: DisconnectEvent) {
         ServerboundTablistRemovePacket(
-            event.player.gameProfile.toTabProfile(),
+            event.player.uniqueId,
             CommonCloudServer.current()
         ).fireAndForget()
     }
