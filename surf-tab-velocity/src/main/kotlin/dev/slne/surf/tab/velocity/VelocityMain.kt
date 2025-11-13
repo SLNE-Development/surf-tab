@@ -10,7 +10,6 @@ import com.velocitypowered.api.proxy.ProxyServer
 import dev.slne.surf.cloud.api.common.CloudInstance
 import dev.slne.surf.cloud.api.common.startSpringApplication
 import dev.slne.surf.tab.SurfTablistApplication
-import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.listener.ConnectionListener
 import java.nio.file.Path
 
@@ -28,7 +27,6 @@ class VelocityMain @Inject constructor(
     @Subscribe
     fun onInitialization(event: ProxyInitializeEvent) {
         instance = this
-        surfTabCommand()
 
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
     }
