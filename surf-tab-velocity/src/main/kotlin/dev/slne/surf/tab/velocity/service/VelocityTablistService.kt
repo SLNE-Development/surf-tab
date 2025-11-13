@@ -3,12 +3,11 @@ package dev.slne.surf.tab.velocity.service
 import dev.slne.surf.cloud.api.common.player.CloudPlayer
 import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.velocity.util.currentPlatform
-import dev.slne.surf.tab.velocity.util.formatWithAdventure
 import dev.slne.surf.tab.velocity.util.toVelocity
-import org.springframework.stereotype.Component
+import net.kyori.adventure.text.Component
 import java.util.*
 
-@Component
+@org.springframework.stereotype.Component
 class VelocityTablistService {
     fun addPlayer(viewer: CloudPlayer, entry: TabEntry) {
         val velocityPlayer = viewer.currentPlatform
@@ -20,12 +19,12 @@ class VelocityTablistService {
         velocityPlayer.tabList.removeEntry(entryUuid)
     }
 
-    fun sendAdditions(player: CloudPlayer, header: String, footer: String) {
+    fun sendAdditions(player: CloudPlayer, header: Component, footer: Component) {
         val velocityPlayer = player.currentPlatform
 
         velocityPlayer.sendPlayerListHeaderAndFooter(
-            header.formatWithAdventure(player),
-            footer.formatWithAdventure(player)
+            header,
+            footer
         )
     }
 }

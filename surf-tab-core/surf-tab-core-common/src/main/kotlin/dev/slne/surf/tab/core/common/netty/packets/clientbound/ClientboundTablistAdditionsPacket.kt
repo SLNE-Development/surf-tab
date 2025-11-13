@@ -5,11 +5,12 @@ import dev.slne.surf.cloud.api.common.netty.network.protocol.PacketFlow
 import dev.slne.surf.cloud.api.common.netty.packet.NettyPacket
 import dev.slne.surf.cloud.api.common.player.CloudPlayer
 import kotlinx.serialization.Serializable
+import net.kyori.adventure.text.Component
 
 @Serializable
 @SurfNettyPacket("tablist:clientbound:additions", PacketFlow.CLIENTBOUND)
 class ClientboundTablistAdditionsPacket(
     val player: CloudPlayer?,
-    val header: String,
-    val footer: String
+    val header: Component,
+    val footer: Component
 ) : NettyPacket()
