@@ -6,6 +6,7 @@ import com.velocitypowered.api.util.GameProfile
 import dev.slne.surf.cloud.api.common.player.CloudPlayer
 import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.api.entry.TabProfile
+import dev.slne.surf.tab.api.entry.TabProfileProperty
 import dev.slne.surf.tab.velocity.plugin
 
 fun TabProfile.toGameProfile() = GameProfile(this.uuid, this.name, this.properties.map {
@@ -23,5 +24,17 @@ fun TabEntry.toVelocity(tablist: TabList): TabListEntry = TabListEntry
     .showHat(true)
     .gameMode(this.gameMode.id)
     .build()
+
+fun GameProfile.toTabProfile() = TabProfile(
+    uuid = this.id,
+    name = this.name,
+    properties = this.properties.map {
+        TabProfileProperty(
+            name = it.name,
+            value = it.value,
+            signature = it.signature ?: ""
+        )
+    }
+)
 
 val CloudPlayer.currentPlatform get() = plugin.proxy.getPlayer(this.uuid).get()

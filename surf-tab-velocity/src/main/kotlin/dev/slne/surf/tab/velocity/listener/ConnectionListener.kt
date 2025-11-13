@@ -9,13 +9,14 @@ import dev.slne.surf.cloud.api.common.server.CommonCloudServer
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAddPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAdditionsPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistRemovePacket
+import dev.slne.surf.tab.velocity.util.toTabProfile
 
 class ConnectionListener {
     @Subscribe
     fun postConnect(event: ServerPostConnectEvent) {
         ServerboundTablistAdditionsPacket(event.player.uniqueId).fireAndForget()
         ServerboundTablistAddPacket(
-            event.player.uniqueId,
+            event.player.gameProfile.toTabProfile(),
             CommonCloudServer.current()
         ).fireAndForget()
     }
@@ -23,7 +24,7 @@ class ConnectionListener {
     @Subscribe
     fun onDisconnect(event: DisconnectEvent) {
         ServerboundTablistRemovePacket(
-            event.player.uniqueId,
+            event.player.gameProfile.toTabProfile(),
             CommonCloudServer.current()
         ).fireAndForget()
     }
