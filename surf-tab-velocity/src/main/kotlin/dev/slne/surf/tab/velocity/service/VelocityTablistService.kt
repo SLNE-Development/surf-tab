@@ -5,41 +5,28 @@ import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.velocity.util.currentPlatform
 import dev.slne.surf.tab.velocity.util.formatWithAdventure
 import dev.slne.surf.tab.velocity.util.toVelocity
-import it.unimi.dsi.fastutil.objects.ObjectList
 import org.springframework.stereotype.Component
 
 @Component
-class VelocityTablistService(
-    private val syncService: VelocitySyncService
-) {
-    fun sendTablistUpdate(player: CloudPlayer, entries: ObjectList<TabEntry>) {
-        this.sendEssentials(player)
-
-        this.clearActualTablist(player)
-        this.sendTablist(player, entries)
+class VelocityTablistService {
+    fun addPlayer(viewer: CloudPlayer, entry: TabEntry) {
+        val velocityPlayer = viewer.currentPlatform
+        velocityPlayer.tabList.addEntry(entry.toVelocity(velocityPlayer.tabList))
+    }
+    
+    fun removePlayer(viewer: CloudPlayer, entryName: String) {
+        val velocityPlayer = viewer.currentPlatform
+        velocityPlayer.tabList.entries.firstOrNull { it.profile.name == entryName }?.let {
+            velocityPlayer.tabList.removeEntry(it.profile.id)
+        }
     }
 
-    fun addPlayer()
-
-    private fun sendEssentials(player: CloudPlayer) {
+    fun sendAdditions(player: CloudPlayer, header: String, footer: String) {
         val velocityPlayer = player.currentPlatform
 
         velocityPlayer.sendPlayerListHeaderAndFooter(
-            syncService.tabHeader.get().formatWithAdventure(player),
-            syncService.tabFooter.get().formatWithAdventure(player)
+            header.formatWithAdventure(player),
+            footer.formatWithAdventure(player)
         )
-    }
-
-    private fun clearActualTablist(player: CloudPlayer) {
-        val velocityPlayer = player.currentPlatform
-        velocityPlayer.tabList.entries.forEach { velocityPlayer.tabList.removeEntry(it.profile.id) }
-    }
-
-    private fun sendTablist(player: CloudPlayer, entries: ObjectList<TabEntry>) {
-        val velocityPlayer = player.currentPlatform
-
-        velocityPlayer.tabList.addEntries(entries.map {
-            it.toVelocity(velocityPlayer.tabList)
-        })
     }
 }

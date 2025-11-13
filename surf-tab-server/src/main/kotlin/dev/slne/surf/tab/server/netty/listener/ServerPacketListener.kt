@@ -1,6 +1,7 @@
 package dev.slne.surf.tab.server.netty.listener
 
 import dev.slne.surf.cloud.api.common.meta.SurfNettyPacketHandler
+import dev.slne.surf.cloud.api.common.player.CloudPlayer
 import dev.slne.surf.cloud.api.server.netty.packet.broadcast
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistAdditionsPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAddPacket
@@ -24,9 +25,9 @@ class ServerPacketListener {
     @SurfNettyPacketHandler
     fun handleAdditionsPacket(packet: ServerboundTablistAdditionsPacket) {
         ClientboundTablistAdditionsPacket(
+            player = packet.player?.let { CloudPlayer[it] },
             header = config.header,
-            footer = config.footer,
-            nameFormat = config.nameFormat
+            footer = config.footer
         ).broadcast()
     }
 }
