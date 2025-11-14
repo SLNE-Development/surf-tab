@@ -15,7 +15,7 @@ object CloudPlaceholderExtension : PlaceholderExtension,
     override val name = "cloud"
 
     private val dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-    private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+    private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     override fun resolver() = TagResolver.resolver(
         Placeholder.parsed("online_players", CloudPlayerManager.getOnlinePlayers().size.toString()),
