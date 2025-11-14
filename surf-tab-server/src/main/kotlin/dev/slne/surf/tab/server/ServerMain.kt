@@ -1,5 +1,6 @@
 package dev.slne.surf.tab.server
 
+import dev.slne.surf.cloud.api.common.player.CloudPlayer
 import dev.slne.surf.cloud.api.server.plugin.StandalonePlugin
 import dev.slne.surf.surfapi.core.api.util.logger
 import dev.slne.surf.tab.server.config.TablistConfigProvider
@@ -15,7 +16,11 @@ class ServerMain : StandalonePlugin() {
 
     override suspend fun enable() {
         PlaceholderManager.register(CloudPlaceholderExtension)
-        PlaceholderManager.register(LuckPermsPlaceholderExtension)
+        PlaceholderManager.registerContextual(CloudPlayer::class.java, CloudPlaceholderExtension)
+        PlaceholderManager.registerAsyncContextual(
+            CloudPlayer::class.java,
+            LuckPermsPlaceholderExtension
+        )
     }
 
     override suspend fun disable() {

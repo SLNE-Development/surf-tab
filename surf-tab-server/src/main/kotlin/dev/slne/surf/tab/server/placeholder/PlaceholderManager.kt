@@ -17,74 +17,96 @@ import java.util.concurrent.CopyOnWriteArrayList
 object PlaceholderManager {
     private val syncExtensions = CopyOnWriteArrayList<PlaceholderExtension>()
     private val asyncExtensions = CopyOnWriteArrayList<AsyncPlaceholderExtension>()
+    private val contextualExtensions =
+        CopyOnWriteArrayList<Pair<Class<*>, ContextualPlaceholderExtension<*>>>()
+    private val asyncContextualExtensions =
+        CopyOnWriteArrayList<Pair<Class<*>, AsyncContextualPlaceholderExtension<*>>>()
+    private val mini = MiniMessage.miniMessage()
 
-    private val miniMessage = MiniMessage.miniMessage()
+    fun register(ext: PlaceholderExtension) = syncExtensions.add(ext)
+    fun registerAsync(ext: AsyncPlaceholderExtension) = asyncExtensions.add(ext)
+    fun <P> registerContextual(clazz: Class<P>, ext: ContextualPlaceholderExtension<P>) =
+        contextualExtensions.add(clazz to ext)
 
-    fun register(extension: PlaceholderExtension) = syncExtensions.add(extension)
-    fun registerAsync(extension: AsyncPlaceholderExtension) = asyncExtensions.add(extension)
+    fun <P> registerAsyncContextual(clazz: Class<P>, ext: AsyncContextualPlaceholderExtension<P>) =
+        asyncContextualExtensions.add(clazz to ext)
+
     fun clear() {
         syncExtensions.clear()
         asyncExtensions.clear()
+        contextualExtensions.clear()
+        asyncContextualExtensions.clear()
     }
 
-    private fun combineResolvers(vararg groups: List<TagResolver>): TagResolver {
-        val flattened = groups.asIterable().flatten()
-        return TagResolver.resolver(*flattened.toTypedArray())
+    private fun combine(vararg lists: List<TagResolver>): TagResolver {
+        val flat = lists.flatMap { it }
+        return TagResolver.resolver(*flat.toTypedArray())
     }
+
+    private fun syncResolvers() = syncExtensions.map { it.resolver() }
+
+    private fun <P> contextualResolvers(context: P): List<TagResolver> =
+        contextualExtensions
+            .filter { it.first.isInstance(context) }
+            .map { (clazz, ext) ->
+                @Suppress("UNCHECKED_CAST")
+                (ext as ContextualPlaceholderExtension<P>).resolver(context)
+            }
+
+    private suspend fun asyncResolvers(): List<TagResolver> = coroutineScope {
+        asyncExtensions.map { ext ->
+            async(Dispatchers.IO) { ext.resolver() }
+        }.awaitAll()
+    }
+
+    private suspend fun <P> asyncContextualResolvers(context: P): List<TagResolver> =
+        coroutineScope {
+            asyncContextualExtensions
+                .filter { it.first.isInstance(context) }
+                .map { (_, ext) ->
+                    async(Dispatchers.IO) {
+                        @Suppress("UNCHECKED_CAST")
+                        (ext as AsyncContextualPlaceholderExtension<P>).resolver(context)
+                    }
+                }.awaitAll()
+        }
 
     fun parse(message: String): Component {
-        val syncResolvers = syncExtensions.map { it.resolver() }
-        return miniMessage.deserialize(message, combineResolvers(syncResolvers))
+        val sync = syncResolvers()
+        return mini.deserialize(message, combine(sync))
+    }
+
+    fun <P> parse(message: String, context: P): Component {
+        val sync = syncResolvers()
+        val ctx = contextualResolvers(context)
+        return mini.deserialize(message, combine(sync, ctx))
     }
 
     suspend fun parseAsync(message: String): Component {
-        val syncResolvers = syncExtensions.map { it.resolver() }
+        val sync = syncResolvers()
+        val async = asyncResolvers()
+        return mini.deserialize(message, combine(sync, async))
+    }
 
-        val asyncResolvers: List<TagResolver> = coroutineScope {
-            val deferred = asyncExtensions.map { extension ->
-                async<TagResolver>(Dispatchers.IO) { extension.resolver() }
-            }
-            deferred.awaitAll()
-        }
-
-        return miniMessage.deserialize(message, combineResolvers(syncResolvers, asyncResolvers))
+    suspend fun <P> parseAsync(message: String, context: P): Component {
+        val sync = syncResolvers()
+        val ctx = contextualResolvers(context)
+        val async = asyncResolvers()
+        val asyncCtx = asyncContextualResolvers(context)
+        return mini.deserialize(message, combine(sync, ctx, async, asyncCtx))
     }
 
     fun parseAsync(message: String, callback: (Component) -> Unit) {
         plugin.launch(Dispatchers.IO) {
-            withContext(Dispatchers.Main) { callback(parseAsync(message)) }
+            val result = parseAsync(message)
+            withContext(Dispatchers.Main) { callback(result) }
         }
     }
 
-    fun <P> parseWith(
-        message: String,
-        context: P,
-        extensions: List<ContextualPlaceholderExtension<P>>
-    ): Component {
-        val resolvers = extensions.map { it.resolver(context) }
-        return miniMessage.deserialize(message, TagResolver.resolver(resolvers))
-    }
-
-    suspend fun <P> parseWithAsync(
-        message: String,
-        context: P,
-        extensions: List<AsyncContextualPlaceholderExtension<P>>
-    ): Component {
-        val resolvers = coroutineScope {
-            extensions.map { async { it.resolver(context) } }.awaitAll()
-        }
-        return miniMessage.deserialize(message, TagResolver.resolver(resolvers))
-    }
-
-    fun <P> parseWithAsync(
-        message: String,
-        context: P,
-        extensions: List<AsyncContextualPlaceholderExtension<P>>,
-        callback: (Component) -> Unit
-    ) {
+    fun <P> parseAsync(message: String, context: P, callback: (Component) -> Unit) {
         plugin.launch(Dispatchers.IO) {
-            withContext(Dispatchers.Main) { callback(parseWithAsync(message, context, extensions)) }
+            val result = parseAsync(message, context)
+            withContext(Dispatchers.Main) { callback(result) }
         }
     }
 }
-
