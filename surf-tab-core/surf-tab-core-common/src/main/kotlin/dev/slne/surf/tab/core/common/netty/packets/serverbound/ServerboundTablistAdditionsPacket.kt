@@ -10,5 +10,5 @@ import java.util.*
 @Serializable
 @SurfNettyPacket("tablist:serverbound:additions", PacketFlow.SERVERBOUND)
 class ServerboundTablistAdditionsPacket(
-    val player: @Contextual UUID?
+    val player: @Contextual UUID
 ) : NettyPacket()

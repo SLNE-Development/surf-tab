@@ -10,7 +10,7 @@ import net.kyori.adventure.text.Component
 @Serializable
 @SurfNettyPacket("tablist:clientbound:additions", PacketFlow.CLIENTBOUND)
 class ClientboundTablistAdditionsPacket(
-    val player: CloudPlayer?,
+    val player: CloudPlayer,
     val header: Component,
     val footer: Component
 ) : NettyPacket()

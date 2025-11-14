@@ -48,7 +48,7 @@ object PlaceholderManager {
     private fun <P> contextualResolvers(context: P): List<TagResolver> =
         contextualExtensions
             .filter { it.first.isInstance(context) }
-            .map { (clazz, ext) ->
+            .map { (_, ext) ->
                 @Suppress("UNCHECKED_CAST")
                 (ext as ContextualPlaceholderExtension<P>).resolver(context)
             }

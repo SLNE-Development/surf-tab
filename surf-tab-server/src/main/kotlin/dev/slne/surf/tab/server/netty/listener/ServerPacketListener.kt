@@ -3,7 +3,6 @@ package dev.slne.surf.tab.server.netty.listener
 import dev.slne.surf.cloud.api.common.meta.SurfNettyPacketHandler
 import dev.slne.surf.cloud.api.common.player.CloudPlayer
 import dev.slne.surf.cloud.api.server.netty.packet.broadcast
-import dev.slne.surf.surfapi.core.api.messages.adventure.text
 import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.api.entry.TabGameMode
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistAddPacket
@@ -13,7 +12,7 @@ import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablis
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAdditionsPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistRemovePacket
 import dev.slne.surf.tab.server.config
-import net.kyori.adventure.text.format.NamedTextColor
+import dev.slne.surf.tab.server.placeholder.PlaceholderManager
 import org.springframework.stereotype.Component
 
 @Component
@@ -24,10 +23,12 @@ class ServerPacketListener {
         val cloudPlayer = CloudPlayer[profile.uuid] ?: return
         val luckpermsMetaWeight = cloudPlayer.getLuckpermsMetaData("weight")?.toIntOrNull() ?: 0
 
+        val displayName = PlaceholderManager.parseAsync(config.nameFormat, cloudPlayer)
+
         ClientboundTablistAddPacket(
             TabEntry(
                 profile = profile,
-                displayName = text(profile.name, NamedTextColor.WHITE),
+                displayName = displayName,
                 gameMode = TabGameMode.SURVIVAL,
                 ping = 0,
                 weight = luckpermsMetaWeight
@@ -47,10 +48,12 @@ class ServerPacketListener {
 
     @SurfNettyPacketHandler
     fun handleAdditionsPacket(packet: ServerboundTablistAdditionsPacket) {
+        val player = CloudPlayer[packet.player] ?: return
+
         ClientboundTablistAdditionsPacket(
-            player = packet.player?.let { CloudPlayer[it] },
-            header = config.header,
-            footer = config.footer
+            player = player,
+            header = PlaceholderManager.parse(config.header, player),
+            footer = PlaceholderManager.parse(config.footer, player)
         ).broadcast()
     }
 
