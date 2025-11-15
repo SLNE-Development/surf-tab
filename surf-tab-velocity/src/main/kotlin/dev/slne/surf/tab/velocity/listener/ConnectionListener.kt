@@ -17,7 +17,7 @@ class ConnectionListener {
         ServerboundTablistAdditionsPacket(event.player.uniqueId).fireAndForget()
         ServerboundTablistAddPacket(
             event.player.gameProfile.toTabProfile(),
-            CommonCloudServer.current()
+            CommonCloudServer.current().name
         ).fireAndForget()
     }
 
@@ -25,7 +25,7 @@ class ConnectionListener {
     fun onDisconnect(event: DisconnectEvent) {
         ServerboundTablistRemovePacket(
             event.player.uniqueId,
-            CommonCloudServer.current()
+            CommonCloudServer.current().name
         ).fireAndForget()
     }
 }

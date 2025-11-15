@@ -34,7 +34,7 @@ class ServerPacketListener {
                 weight = luckpermsMetaWeight
             )
         ).broadcast {
-            getSeenServers(packet.senderServer.name).contains(it.hostname)
+            getSeenServers(packet.senderServer).contains(it.hostname)
         }
     }
 
@@ -43,7 +43,7 @@ class ServerPacketListener {
         ClientboundTablistRemovePacket(
             packet.uuid
         ).broadcast {
-            getSeenServers(packet.senderServer.name).contains(it.hostname)
+            getSeenServers(packet.senderServer).contains(it.hostname)
         }
 
     @SurfNettyPacketHandler
