@@ -10,8 +10,10 @@ import dev.slne.surf.tab.server.placeholder.PlaceholderManager
 import dev.slne.surf.tab.server.placeholder.impl.CloudPlaceholderExtension
 import dev.slne.surf.tab.server.placeholder.impl.LuckPermsPlaceholderExtension
 import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
+@Component
 class ServerMain : StandalonePlugin() {
     val log = logger()
 
