@@ -8,11 +8,13 @@ import dev.slne.surf.tab.api.entry.TabGameMode
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistAddPacket
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistAdditionsPacket
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistRemovePacket
+import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundReloadPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAddPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAdditionsPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistRemovePacket
 import dev.slne.surf.tab.server.config
 import dev.slne.surf.tab.server.placeholder.PlaceholderManager
+import dev.slne.surf.tab.server.plugin
 import org.springframework.stereotype.Component
 
 @Component
@@ -47,14 +49,27 @@ class ServerPacketListener {
         }
 
     @SurfNettyPacketHandler
-    fun handleAdditionsPacket(packet: ServerboundTablistAdditionsPacket) {
+    suspend fun handleAdditionsPacket(packet: ServerboundTablistAdditionsPacket) {
         val player = CloudPlayer[packet.player] ?: return
 
         ClientboundTablistAdditionsPacket(
             player = player,
-            header = PlaceholderManager.parse(config.header, player),
-            footer = PlaceholderManager.parse(config.footer, player)
+            header = PlaceholderManager.parseAsync(config.header, player),
+            footer = PlaceholderManager.parseAsync(config.footer, player)
         ).broadcast()
+    }
+
+    @SurfNettyPacketHandler
+    fun handleReloadPacket(packet: ServerboundReloadPacket) {
+        plugin.configuration.reload()
+
+        CloudPlayer.all().forEach {
+            ClientboundTablistAdditionsPacket(
+                player = it,
+                header = PlaceholderManager.parse(config.header, it),
+                footer = PlaceholderManager.parse(config.footer, it)
+            ).broadcast()
+        }
     }
 
     private fun getSeenServers(base: String): List<String> {

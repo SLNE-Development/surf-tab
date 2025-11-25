@@ -7,7 +7,9 @@ import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablis
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistRemovePacket
 import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.service.VelocityTablistService
+import org.springframework.stereotype.Component
 
+@Component
 class VelocityPacketListener(
     private val tablistService: VelocityTablistService
 ) {
@@ -29,13 +31,6 @@ class VelocityPacketListener(
     fun handleAdditionsPacket(packet: ClientboundTablistAdditionsPacket) {
         val player = packet.player
 
-        if (player != null) {
-            tablistService.sendAdditions(player, packet.header, packet.footer)
-            return
-        }
-
-        plugin.proxy.allPlayers.mapNotNull { CloudPlayer[it.uniqueId] }.forEach {
-            tablistService.sendAdditions(it, packet.header, packet.footer)
-        }
+        tablistService.sendAdditions(player, packet.header, packet.footer)
     }
 }

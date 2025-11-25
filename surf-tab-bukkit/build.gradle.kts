@@ -4,8 +4,8 @@ plugins {
 
 surfPaperPluginApi {
     withCloudClientPaper()
-    mainClass("dev.slne.surf.tab.bukkit.PaperMain")
-    bootstrapper("dev.slne.surf.tab.bukkit.PaperBootstrap")
+    mainClass("dev.slne.surf.tab.bukkit.BukkitMain")
+    bootstrapper("dev.slne.surf.tab.bukkit.BukkitBootstrap")
 
     authors.add("red")
 }

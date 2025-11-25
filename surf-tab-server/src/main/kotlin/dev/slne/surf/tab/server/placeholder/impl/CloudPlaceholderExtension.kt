@@ -12,19 +12,30 @@ import java.time.format.DateTimeFormatter
 
 object CloudPlaceholderExtension : PlaceholderExtension,
     ContextualPlaceholderExtension<CloudPlayer> {
+
     override val name = "cloud"
 
     private val dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-    override fun resolver() = TagResolver.resolver(
-        Placeholder.parsed("online_players", CloudPlayerManager.getOnlinePlayers().size.toString()),
-        Placeholder.parsed("max_players", CloudServer.all().sumOf { it.maxPlayerCount }.toString()),
-        Placeholder.parsed("time", LocalDateTime.now().format(timeFormatter)),
-        Placeholder.parsed("date", LocalDateTime.now().format(dateFormatter))
-    )
+    override fun resolver(): TagResolver {
+        return TagResolver.resolver(
+            Placeholder.parsed(
+                "cloud:online_players",
+                CloudPlayerManager.getOnlinePlayers().size.toString()
+            ),
+            Placeholder.parsed(
+                "cloud:max_players",
+                CloudServer.all().sumOf { it.maxPlayerCount }.toString()
+            ),
+            Placeholder.parsed("cloud:time", LocalDateTime.now().format(timeFormatter)),
+            Placeholder.parsed("cloud:date", LocalDateTime.now().format(dateFormatter))
+        )
+    }
 
-    override fun resolver(context: CloudPlayer) = TagResolver.resolver(
-        Placeholder.parsed("server", context.currentServer().name)
-    )
+    override fun resolver(context: CloudPlayer): TagResolver {
+        return TagResolver.resolver(
+            Placeholder.parsed("cloud:server", context.currentServer()?.name ?: "Unknown")
+        )
+    }
 }

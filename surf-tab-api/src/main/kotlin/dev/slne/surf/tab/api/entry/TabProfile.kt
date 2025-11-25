@@ -8,7 +8,7 @@ import java.util.*
 data class TabProfile(
     val uuid: @Contextual UUID,
     val name: String,
-    val properties: List<TabProfileProperty> = listOf<TabProfileProperty>()
+    val properties: List<TabProfileProperty> = listOf()
 )
 
 @Serializable

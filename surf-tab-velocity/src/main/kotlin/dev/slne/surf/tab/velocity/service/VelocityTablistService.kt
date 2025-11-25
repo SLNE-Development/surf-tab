@@ -5,9 +5,10 @@ import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.velocity.util.currentPlatform
 import dev.slne.surf.tab.velocity.util.toVelocity
 import net.kyori.adventure.text.Component
+import org.springframework.stereotype.Service
 import java.util.*
 
-@org.springframework.stereotype.Component
+@Service
 class VelocityTablistService {
     fun addPlayer(viewer: CloudPlayer, entry: TabEntry) {
         val velocityPlayer = viewer.currentPlatform
