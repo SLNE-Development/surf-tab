@@ -21,21 +21,22 @@ object CloudPlaceholderExtension : PlaceholderExtension,
     override fun resolver(): TagResolver {
         return TagResolver.resolver(
             Placeholder.parsed(
-                "cloud:online_players",
+                "cloud_online_players",
                 CloudPlayerManager.getOnlinePlayers().size.toString()
             ),
             Placeholder.parsed(
-                "cloud:max_players",
+                "cloud_max_players",
                 CloudServer.all().sumOf { it.maxPlayerCount }.toString()
             ),
-            Placeholder.parsed("cloud:time", LocalDateTime.now().format(timeFormatter)),
-            Placeholder.parsed("cloud:date", LocalDateTime.now().format(dateFormatter))
+            Placeholder.parsed("cloud_time", LocalDateTime.now().format(timeFormatter)),
+            Placeholder.parsed("cloud_date", LocalDateTime.now().format(dateFormatter))
         )
     }
 
     override fun resolver(context: CloudPlayer): TagResolver {
         return TagResolver.resolver(
-            Placeholder.parsed("cloud:server", context.currentServer()?.name ?: "Unknown")
+            Placeholder.parsed("cloud_server", context.currentServer().name),
+            Placeholder.parsed("cloud_name", context.name)
         )
     }
 }

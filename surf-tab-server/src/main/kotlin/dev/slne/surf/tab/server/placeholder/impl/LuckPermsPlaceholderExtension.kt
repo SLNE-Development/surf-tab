@@ -11,8 +11,8 @@ object LuckPermsPlaceholderExtension : AsyncContextualPlaceholderExtension<Cloud
 
     override suspend fun resolver(context: CloudPlayer): TagResolver {
         return TagResolver.resolver(
-            Placeholder.parsed("luckperms:prefix", context.getLuckpermsMetaData("prefix") ?: ""),
-            Placeholder.parsed("luckperms:suffix", context.getLuckpermsMetaData("suffix") ?: "")
+            Placeholder.parsed("luckperms_prefix", context.getLuckpermsMetaData("prefix") ?: ""),
+            Placeholder.parsed("luckperms_suffix", context.getLuckpermsMetaData("suffix") ?: "")
         )
     }
 }
