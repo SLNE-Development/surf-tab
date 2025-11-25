@@ -29,7 +29,7 @@ class VelocityPacketListener(
 
     @SurfNettyPacketHandler
     fun handleAdditionsPacket(packet: ClientboundTablistAdditionsPacket) {
-        val player = packet.player
+        val player = CloudPlayer[packet.player] ?: return
 
         tablistService.sendAdditions(player, packet.header, packet.footer)
     }

@@ -34,12 +34,12 @@ class ServerMain : StandalonePlugin() {
 
     val configuration = TablistConfigProvider()
 
-    @Scheduled(fixedRate = 1L, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(fixedRate = 1L, timeUnit = TimeUnit.SECONDS)
     fun updateTablist() {
         if (config.updateEveryMinute) {
             CloudPlayer.all().forEach {
                 ClientboundTablistAdditionsPacket(
-                    player = it,
+                    player = it.uuid,
                     header = PlaceholderManager.parse(config.header, it),
                     footer = PlaceholderManager.parse(config.footer, it)
                 ).broadcast()

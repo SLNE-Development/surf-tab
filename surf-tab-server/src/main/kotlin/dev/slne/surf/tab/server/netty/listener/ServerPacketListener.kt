@@ -53,7 +53,7 @@ class ServerPacketListener {
         val player = CloudPlayer[packet.player] ?: return
 
         ClientboundTablistAdditionsPacket(
-            player = player,
+            player = player.uuid,
             header = PlaceholderManager.parseAsync(config.header, player),
             footer = PlaceholderManager.parseAsync(config.footer, player)
         ).broadcast()
@@ -65,7 +65,7 @@ class ServerPacketListener {
 
         CloudPlayer.all().forEach {
             ClientboundTablistAdditionsPacket(
-                player = it,
+                player = it.uuid,
                 header = PlaceholderManager.parse(config.header, it),
                 footer = PlaceholderManager.parse(config.footer, it)
             ).broadcast()

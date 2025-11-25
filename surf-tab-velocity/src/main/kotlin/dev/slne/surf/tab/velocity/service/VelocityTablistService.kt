@@ -11,17 +11,17 @@ import java.util.*
 @Service
 class VelocityTablistService {
     fun addPlayer(viewer: CloudPlayer, entry: TabEntry) {
-        val velocityPlayer = viewer.currentPlatform
+        val velocityPlayer = viewer.currentPlatform ?: return
         velocityPlayer.tabList.addEntry(entry.toVelocity(velocityPlayer.tabList))
     }
 
     fun removePlayer(viewer: CloudPlayer, entryUuid: UUID) {
-        val velocityPlayer = viewer.currentPlatform
+        val velocityPlayer = viewer.currentPlatform ?: return
         velocityPlayer.tabList.removeEntry(entryUuid)
     }
 
     fun sendAdditions(player: CloudPlayer, header: Component, footer: Component) {
-        val velocityPlayer = player.currentPlatform
+        val velocityPlayer = player.currentPlatform ?: return
 
         velocityPlayer.sendPlayerListHeaderAndFooter(
             header,
