@@ -37,7 +37,9 @@ object CloudPlaceholderExtension : PlaceholderExtension,
 
     override fun resolver(context: CloudPlayer): TagResolver {
         return TagResolver.resolver(
-            Placeholder.parsed("cloud_server", context.currentServer().name),
+            Placeholder.parsed("cloud_server", context.connectedToServer.let {
+                if (it) context.currentServer().name else "Unbekannt"
+            }),
             Placeholder.parsed("cloud_name", context.name),
             Placeholder.component("cloud_afk", parseAfkTag(context.isAfk()))
         )
