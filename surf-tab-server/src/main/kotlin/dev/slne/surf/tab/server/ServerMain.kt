@@ -1,10 +1,9 @@
 package dev.slne.surf.tab.server
 
 import dev.slne.surf.cloud.api.common.player.CloudPlayer
-import dev.slne.surf.cloud.api.common.sync.SyncSet
 import dev.slne.surf.cloud.api.server.netty.packet.broadcast
 import dev.slne.surf.cloud.api.server.plugin.StandalonePlugin
-import dev.slne.surf.tab.api.entry.TabEntry
+import dev.slne.surf.tab.core.common.SyncValues
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistAdditionsPacket
 import dev.slne.surf.tab.server.config.TablistConfigProvider
 import dev.slne.surf.tab.server.placeholder.PlaceholderManager
@@ -16,7 +15,10 @@ import java.util.concurrent.TimeUnit
 
 @Component
 class ServerMain : StandalonePlugin() {
-    val tabEntries: SyncSet<Pair<String, TabEntry>> = SyncSet("tab:entries")
+
+    init {
+        SyncValues.init()
+    }
 
     override suspend fun load() {
     }
@@ -50,5 +52,4 @@ class ServerMain : StandalonePlugin() {
 }
 
 val config get() = plugin.configuration.config
-
 val plugin get() = StandalonePlugin.getPlugin(ServerMain::class)

@@ -3,8 +3,10 @@ package dev.slne.surf.tab.server.netty.listener
 import dev.slne.surf.cloud.api.common.meta.SurfNettyPacketHandler
 import dev.slne.surf.cloud.api.common.player.CloudPlayer
 import dev.slne.surf.cloud.api.server.netty.packet.broadcast
+import dev.slne.surf.surfapi.core.api.util.logger
 import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.api.entry.TabGameMode
+import dev.slne.surf.tab.core.common.SyncValues
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistAdditionsPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundReloadPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAddPacket
@@ -25,8 +27,13 @@ class ServerPacketListener {
 
         val displayName = PlaceholderManager.parseAsync(config.nameFormat, cloudPlayer)
 
+        logger().atInfo()
+            .log("Groups: ${config.groups}, seen servers: ${getSeenServers(packet.senderServer)}")
+
         getSeenServers(packet.senderServer).forEach {
-            plugin.tabEntries.add(
+            logger().atInfo()
+                .log("Adding tablist entry for player ${profile.name} (${profile.uuid}) on server $it")
+            SyncValues.tabEntries.add(
                 it to TabEntry(
                     profile = profile,
                     displayName = displayName,
@@ -41,7 +48,8 @@ class ServerPacketListener {
     @SurfNettyPacketHandler
     suspend fun handleRemovePacket(packet: ServerboundTablistRemovePacket) =
         getSeenServers(packet.senderServer).forEach { _ ->
-            plugin.tabEntries.removeIf { it.second.profile.uuid == packet.uuid }
+            logger().atInfo().log("Removing tablist entry for player with UUID ${packet.uuid}")
+            SyncValues.tabEntries.removeIf { it.second.profile.uuid == packet.uuid }
         }
 
     @SurfNettyPacketHandler
@@ -66,6 +74,16 @@ class ServerPacketListener {
                 footer = PlaceholderManager.parse(config.footer, it)
             ).broadcast()
         }
+
+        val oldEntries = SyncValues.tabEntries.snapshot()
+
+        SyncValues.tabEntries.clear()
+        oldEntries.forEach { (server, entry) ->
+            SyncValues.tabEntries.add(server to entry)
+        }
+
+        logger().atInfo()
+            .log("Successfully reloaded tablist configuration & updated all players' tablists.")
     }
 
     private fun getSeenServers(base: String): List<String> {

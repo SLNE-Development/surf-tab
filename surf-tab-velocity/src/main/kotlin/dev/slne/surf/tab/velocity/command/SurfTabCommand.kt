@@ -21,8 +21,6 @@ fun surfTabCommand() = commandTree("surftab") {
         anyExecutor { executor, _ ->
             ServerboundReloadPacket().fireAndForget()
 
-            tablistService.reloadTablistUsers()
-
             executor.sendText {
                 appendPrefix()
                 success("Die Tablist wurde neu geladen.")

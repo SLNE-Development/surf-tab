@@ -9,24 +9,27 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
 import dev.slne.surf.cloud.api.common.CloudInstance
 import dev.slne.surf.cloud.api.common.startSpringApplication
-import dev.slne.surf.cloud.api.common.sync.SyncSet
 import dev.slne.surf.tab.SurfTablistApplication
-import dev.slne.surf.tab.api.entry.TabEntry
+import dev.slne.surf.tab.core.common.ContextHolderImpl
+import dev.slne.surf.tab.core.common.SyncValues
 import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.listener.ConnectionListener
+import org.slf4j.Logger
 import java.nio.file.Path
 
 class VelocityMain @Inject constructor(
     val proxy: ProxyServer,
     @param:DataDirectory val dataPath: Path,
     suspendingPluginContainer: SuspendingPluginContainer,
-    val pluginContainer: PluginContainer
+    val pluginContainer: PluginContainer,
+    val logger: Logger
 ) {
-    val tabEntries: SyncSet<Pair<String, TabEntry>> = SyncSet("tab:entries")
-
     init {
         suspendingPluginContainer.initialize(this)
-        CloudInstance.startSpringApplication(SurfTablistApplication::class)
+        ContextHolderImpl.instance.context =
+            CloudInstance.startSpringApplication(SurfTablistApplication::class)
+
+        SyncValues.init()
     }
 
     @Subscribe
@@ -36,6 +39,7 @@ class VelocityMain @Inject constructor(
         surfTabCommand()
 
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
+        plugin.logger.info("LOGGER WORKING:::::::::::::::::::::::::::::::::::::")
     }
 
     companion object {

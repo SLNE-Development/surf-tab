@@ -4,6 +4,7 @@ import dev.slne.surf.cloud.api.client.server.current
 import dev.slne.surf.cloud.api.common.player.CloudPlayer
 import dev.slne.surf.cloud.api.common.server.CloudServer
 import dev.slne.surf.tab.api.entry.TabEntry
+import dev.slne.surf.tab.core.common.SyncValues
 import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.util.currentPlatform
 import dev.slne.surf.tab.velocity.util.toVelocity
@@ -14,19 +15,25 @@ import java.util.*
 @Service
 class VelocityTablistService {
     init {
-        plugin.tabEntries.subscribe { added, element ->
+        SyncValues.tabEntries.subscribe { added, element ->
             val currentServer = CloudServer.current()
+
+            plugin.logger.debug("Tablist entry ${if (added) "added" else "removed"}: ${element.second.displayName} for server ${element.first}")
 
             if (element.first != currentServer.name) {
                 return@subscribe
             }
 
+            plugin.logger.debug("Updating tablist for server ${currentServer.name}")
+
             if (added) {
                 currentServer.users.forEach {
+                    plugin.logger.debug("Adding tablist entry to player ${it.name}")
                     addPlayer(it, element.second)
                 }
             } else {
                 currentServer.users.forEach {
+                    plugin.logger.debug("Removing tablist entry from player ${it.name}")
                     removePlayer(it, element.second.profile.uuid)
                 }
             }
@@ -36,11 +43,13 @@ class VelocityTablistService {
 
     fun addPlayer(viewer: CloudPlayer, entry: TabEntry) {
         val velocityPlayer = viewer.currentPlatform ?: return
+        plugin.logger.debug("Adding tablist entry ${entry.displayName} to player ${viewer.name}")
         velocityPlayer.tabList.addEntry(entry.toVelocity(velocityPlayer.tabList))
     }
 
     fun removePlayer(viewer: CloudPlayer, entryUuid: UUID) {
         val velocityPlayer = viewer.currentPlatform ?: return
+        plugin.logger.debug("Removing tablist entry $entryUuid from player ${viewer.name}")
         velocityPlayer.tabList.removeEntry(entryUuid)
     }
 
@@ -51,23 +60,5 @@ class VelocityTablistService {
             header,
             footer
         )
-    }
-
-    fun reloadTablistUsers() {
-        val currentServer = CloudServer.current()
-
-        currentServer.users.forEach {
-            it.currentPlatform?.tabList?.clearAll()
-        }
-
-        plugin.tabEntries.forEach { entry ->
-            if (entry.first != currentServer.name) {
-                return@forEach
-            }
-
-            currentServer.users.forEach {
-                addPlayer(it, entry.second)
-            }
-        }
     }
 }
