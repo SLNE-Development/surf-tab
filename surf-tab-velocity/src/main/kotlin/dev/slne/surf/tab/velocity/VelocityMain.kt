@@ -9,7 +9,9 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
 import dev.slne.surf.cloud.api.common.CloudInstance
 import dev.slne.surf.cloud.api.common.startSpringApplication
+import dev.slne.surf.cloud.api.common.sync.SyncSet
 import dev.slne.surf.tab.SurfTablistApplication
+import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.listener.ConnectionListener
 import java.nio.file.Path
@@ -20,6 +22,8 @@ class VelocityMain @Inject constructor(
     suspendingPluginContainer: SuspendingPluginContainer,
     val pluginContainer: PluginContainer
 ) {
+    val tabEntries: SyncSet<Pair<String, TabEntry>> = SyncSet("tab:entries")
+
     init {
         suspendingPluginContainer.initialize(this)
         CloudInstance.startSpringApplication(SurfTablistApplication::class)
@@ -40,4 +44,3 @@ class VelocityMain @Inject constructor(
 }
 
 val plugin get() = VelocityMain.instance
-val container = VelocityMain.instance.pluginContainer

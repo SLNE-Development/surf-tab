@@ -5,9 +5,7 @@ import dev.slne.surf.cloud.api.common.player.CloudPlayer
 import dev.slne.surf.cloud.api.server.netty.packet.broadcast
 import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.api.entry.TabGameMode
-import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistAddPacket
 import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistAdditionsPacket
-import dev.slne.surf.tab.core.common.netty.packets.clientbound.ClientboundTablistRemovePacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundReloadPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAddPacket
 import dev.slne.surf.tab.core.common.netty.packets.serverbound.ServerboundTablistAdditionsPacket
@@ -27,25 +25,23 @@ class ServerPacketListener {
 
         val displayName = PlaceholderManager.parseAsync(config.nameFormat, cloudPlayer)
 
-        ClientboundTablistAddPacket(
-            TabEntry(
-                profile = profile,
-                displayName = displayName,
-                gameMode = TabGameMode.SURVIVAL,
-                ping = 0,
-                weight = luckpermsMetaWeight
+        getSeenServers(packet.senderServer).forEach {
+            plugin.tabEntries.add(
+                it to TabEntry(
+                    profile = profile,
+                    displayName = displayName,
+                    gameMode = TabGameMode.SURVIVAL,
+                    ping = 0,
+                    weight = luckpermsMetaWeight
+                )
             )
-        ).broadcast {
-            getSeenServers(packet.senderServer).contains(it.hostname)
         }
     }
 
     @SurfNettyPacketHandler
     suspend fun handleRemovePacket(packet: ServerboundTablistRemovePacket) =
-        ClientboundTablistRemovePacket(
-            packet.uuid
-        ).broadcast {
-            getSeenServers(packet.senderServer).contains(it.hostname)
+        getSeenServers(packet.senderServer).forEach { _ ->
+            plugin.tabEntries.removeIf { it.second.profile.uuid == packet.uuid }
         }
 
     @SurfNettyPacketHandler
