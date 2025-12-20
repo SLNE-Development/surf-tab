@@ -10,7 +10,6 @@ import dev.slne.surf.tab.velocity.util.formatWithAdventure
 import dev.slne.surf.tab.velocity.util.getServers
 import dev.slne.surf.tab.velocity.util.toTabProfile
 import dev.slne.surf.tab.velocity.util.toVelocity
-import net.kyori.adventure.text.Component
 import java.util.*
 
 val tablistService = VelocityTablistService()
@@ -24,8 +23,11 @@ class VelocityTablistService {
         viewer.tabList.removeEntry(entryUuid)
     }
 
-    fun sendAdditions(player: Player, header: Component, footer: Component) {
-        player.sendPlayerListHeaderAndFooter(header, footer)
+    fun sendAdditions(player: Player) {
+        player.sendPlayerListHeaderAndFooter(
+            tablistConfig.header.formatWithAdventure(player),
+            tablistConfig.footer.formatWithAdventure(player)
+        )
     }
 
     fun getSeenServers(base: RegisteredServer): List<RegisteredServer> {

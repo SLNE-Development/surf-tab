@@ -4,8 +4,6 @@ import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.DisconnectEvent
 import com.velocitypowered.api.event.player.ServerPostConnectEvent
 import dev.slne.surf.tab.velocity.service.tablistService
-import dev.slne.surf.tab.velocity.tablistConfig
-import dev.slne.surf.tab.velocity.util.formatWithAdventure
 import kotlin.jvm.optionals.getOrNull
 
 class ConnectionListener {
@@ -17,11 +15,7 @@ class ConnectionListener {
         val seenServers = tablistService.getSeenServers(server)
         val visiblePlayers = seenServers.flatMap { it.playersConnected }.distinct()
 
-        tablistService.sendAdditions(
-            player,
-            tablistConfig.header.formatWithAdventure(player),
-            tablistConfig.footer.formatWithAdventure(player)
-        )
+        tablistService.sendAdditions(player)
 
         visiblePlayers.forEach { other ->
             tablistService.addPlayer(

@@ -11,8 +11,10 @@ import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.config.TablistConfigProvider
 import dev.slne.surf.tab.velocity.hook.LuckPermsHook
 import dev.slne.surf.tab.velocity.listener.ConnectionListener
+import dev.slne.surf.tab.velocity.service.tablistService
 import org.slf4j.Logger
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 
 class VelocityMain @Inject constructor(
     val proxy: ProxyServer,
@@ -33,6 +35,14 @@ class VelocityMain @Inject constructor(
         LuckPermsHook.load()
 
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
+    }
+
+    fun startTask() {
+        plugin.proxy.scheduler.buildTask(this, Runnable {
+            plugin.proxy.allPlayers.forEach {
+                tablistService.sendAdditions(it)
+            }
+        }).repeat(1L, TimeUnit.SECONDS).schedule()
     }
 
     companion object {
