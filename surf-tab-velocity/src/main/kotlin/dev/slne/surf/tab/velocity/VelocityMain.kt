@@ -9,6 +9,7 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
 import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.config.TablistConfigProvider
+import dev.slne.surf.tab.velocity.hook.LuckPermsHook
 import dev.slne.surf.tab.velocity.listener.ConnectionListener
 import org.slf4j.Logger
 import java.nio.file.Path
@@ -29,6 +30,7 @@ class VelocityMain @Inject constructor(
         instance = this
 
         surfTabCommand()
+        LuckPermsHook.load()
 
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
     }

@@ -12,9 +12,8 @@ velocityPluginFile {
 
 
     pluginDependencies {
-        register("miniplaceholders") {
-            optional = true
-        }
+        register("miniplaceholders")
+        register("luckperms")
     }
 }
 
