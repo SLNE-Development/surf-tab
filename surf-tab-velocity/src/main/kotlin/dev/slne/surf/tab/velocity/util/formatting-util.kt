@@ -1,5 +1,7 @@
 package dev.slne.surf.tab.velocity.util
 
+import dev.slne.surf.tab.api.entry.TabGroup
+import dev.slne.surf.tab.velocity.plugin
 import io.github.miniplaceholders.api.MiniPlaceholders
 import io.github.miniplaceholders.api.types.RelationalAudience
 import net.kyori.adventure.audience.Audience
@@ -7,6 +9,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
+import kotlin.jvm.optionals.getOrNull
 
 
 fun String.formatWithAdventure(player: Audience, other: Audience? = null): Component {
@@ -27,3 +30,5 @@ fun String.formatWithAdventure(player: Audience, other: Audience? = null): Compo
 }
 
 fun TextColor.mm() = "<${this.asHexString()}>"
+
+fun TabGroup.getServers() = clients.mapNotNull { plugin.proxy.getServer(it).getOrNull() }

@@ -1,7 +1,0 @@
-name: surf-tab-server
-main: 'dev.slne.surf.tab.server.ServerMain'
-bootstrapper: 'dev.slne.surf.tab.server.ServerBootstrap'
-version: 1.21.10-1.0.0
-description: 'Tablist plugin'
-authors:
-  - 'red'

@@ -1,4 +1,4 @@
-package dev.slne.surf.tab.server.config
+package dev.slne.surf.tab.velocity.config
 
 import dev.slne.surf.tab.api.entry.TabGroup
 import org.spongepowered.configurate.objectmapping.ConfigSerializable

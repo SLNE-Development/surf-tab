@@ -3,12 +3,9 @@ package dev.slne.surf.tab.velocity.util
 import com.velocitypowered.api.proxy.player.TabList
 import com.velocitypowered.api.proxy.player.TabListEntry
 import com.velocitypowered.api.util.GameProfile
-import dev.slne.surf.cloud.api.common.player.CloudPlayer
 import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.api.entry.TabProfile
 import dev.slne.surf.tab.api.entry.TabProfileProperty
-import dev.slne.surf.tab.velocity.plugin
-import kotlin.jvm.optionals.getOrNull
 
 fun TabProfile.toGameProfile() = GameProfile(this.uuid, this.name, this.properties.map {
     GameProfile.Property(it.name, it.value, it.signature)
@@ -37,5 +34,3 @@ fun GameProfile.toTabProfile() = TabProfile(
         )
     }
 )
-
-val CloudPlayer.currentPlatform get() = plugin.proxy.getPlayer(this.uuid).getOrNull()
