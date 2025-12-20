@@ -9,6 +9,13 @@ repositories {
 velocityPluginFile {
     main = "dev.slne.surf.tab.velocity.VelocityMain"
     authors = listOf("red")
+
+
+    pluginDependencies {
+        register("miniplaceholders") {
+            optional = true
+        }
+    }
 }
 
 dependencies {

@@ -22,27 +22,30 @@ class ConnectionListener {
         val server = player.currentServer.getOrNull() ?: return
         val seenServers = getSeenServers(server.server)
         val weight = LuckPermsHook.getWeight(player.uniqueId)
+
         tablistService.sendAdditions(
             player,
             tablistConfig.footer.formatWithAdventure(player),
             tablistConfig.header.formatWithAdventure(player)
         )
 
-        seenServers.forEach { server ->
-            server.playersConnected.forEach {
-                tablistService.addPlayer(
-                    it, TabEntry(
-                        profile = it.gameProfile.toTabProfile(),
-                        displayName = tablistConfig.nameFormat.formatWithAdventure(
-                            player,
-                            it
-                        ),
-                        ping = it.ping.toInt(),
-                        gameMode = TabGameMode.SURVIVAL,
-                        weight = weight
-                    )
+        val visiblePlayers = seenServers
+            .flatMap { it.playersConnected }
+            .filter { it.uniqueId != player.uniqueId }
+
+        visiblePlayers.forEach {
+            tablistService.addPlayer(
+                it, TabEntry(
+                    profile = player.gameProfile.toTabProfile(),
+                    displayName = tablistConfig.nameFormat.formatWithAdventure(
+                        player,
+                        it
+                    ),
+                    ping = player.ping.toInt(),
+                    gameMode = TabGameMode.SURVIVAL,
+                    weight = weight
                 )
-            }
+            )
         }
 
         plugin.logger.info("Sent tablist additions for player ${event.player.username} (${event.player.uniqueId})")

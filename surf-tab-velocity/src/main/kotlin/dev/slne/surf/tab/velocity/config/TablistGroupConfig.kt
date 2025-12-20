@@ -6,7 +6,7 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable
 @ConfigSerializable
 data class TablistGroupConfig(
     val name: String = "example",
-    val clients: List<String> = mutableListOf("lobby01", "lobby02"),
+    val clients: List<String> = listOf("lobby01", "lobby02"),
 ) {
     fun toTabGroup() = TabGroup(
         name = name,
