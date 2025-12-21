@@ -34,6 +34,8 @@ class VelocityMain @Inject constructor(
         surfTabCommand()
         LuckPermsHook.load()
 
+        startTask()
+
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
     }
 
