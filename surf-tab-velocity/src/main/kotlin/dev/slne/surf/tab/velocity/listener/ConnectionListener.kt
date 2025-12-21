@@ -3,17 +3,25 @@ package dev.slne.surf.tab.velocity.listener
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.DisconnectEvent
 import com.velocitypowered.api.event.player.ServerPostConnectEvent
+import com.velocitypowered.api.proxy.Player
+import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.service.tablistService
+import java.util.concurrent.TimeUnit
 import kotlin.jvm.optionals.getOrNull
 
 class ConnectionListener {
     @Subscribe
     fun onPostConnect(event: ServerPostConnectEvent) {
-        val player = event.player
+        plugin.proxy.scheduler.buildTask(plugin, Runnable {
+            handleJoin(event.player)
+        }).delay(300, TimeUnit.MILLISECONDS).schedule()
+    }
+
+    private fun handleJoin(player: Player) {
         val server = player.currentServer.getOrNull()?.server ?: return
 
         val seenServers = tablistService.getSeenServers(server)
-        val visiblePlayers = seenServers.flatMap { it.playersConnected }.distinct()
+        val visiblePlayers = seenServers.flatMap { it.playersConnected }
 
         tablistService.sendAdditions(player)
 
@@ -39,7 +47,6 @@ class ConnectionListener {
 
         tablistService.getSeenServers(server)
             .flatMap { it.playersConnected }
-            .distinct()
             .forEach { other ->
                 tablistService.removePlayer(other, player.uniqueId)
             }
