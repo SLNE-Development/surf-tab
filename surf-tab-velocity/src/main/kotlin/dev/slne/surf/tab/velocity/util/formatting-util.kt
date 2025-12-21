@@ -73,7 +73,7 @@ fun String.formatWithAdventure(player: Player, other: Audience? = null): Compone
         .replaceText {
             it.matchLiteral("<server>")
             it.replacement(buildText {
-                info(
+                variableValue(
                     player.currentServer.getOrNull()?.server?.serverInfo?.name
                         ?: "N/A"
                 )
@@ -111,8 +111,10 @@ fun String.formatWithAdventure(player: Player, other: Audience? = null): Compone
 
 @Volatile
 private var cachedMinute = -1
+
 @Volatile
 private var cachedDate = ""
+
 @Volatile
 private var cachedTime = ""
 
