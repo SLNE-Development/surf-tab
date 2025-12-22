@@ -11,7 +11,6 @@ import dev.slne.surf.tab.velocity.util.getServers
 import dev.slne.surf.tab.velocity.util.toTabProfile
 import dev.slne.surf.tab.velocity.util.toVelocity
 import java.util.*
-import kotlin.jvm.optionals.getOrNull
 
 val tablistService = VelocityTablistService()
 
@@ -49,17 +48,19 @@ class VelocityTablistService {
     )
 
     fun updatePlayerInTablist(player: Player) {
-        val server = player.currentServer.getOrNull()?.server ?: return
-
-        val seenServers = tablistService.getSeenServers(server)
-        val viewers = seenServers.flatMap { it.playersConnected }.distinct()
-
-        viewers.forEach { viewer ->
-            tablistService.removePlayer(viewer, player.uniqueId)
-            tablistService.addPlayer(viewer, tablistService.createEntry(player, viewer))
-        }
-
-        tablistService.removePlayer(player, player.uniqueId)
-        tablistService.addPlayer(player, tablistService.createEntry(player, player))
+//        val server = player.currentServer.getOrNull()?.server ?: return
+//
+//        val seenServers = tablistService.getSeenServers(server)
+//        val viewers = seenServers.flatMap { it.playersConnected }.distinct()
+//
+//        viewers.forEach { viewer ->
+//            tablistService.removePlayer(viewer, player.uniqueId)
+//            tablistService.addPlayer(viewer, tablistService.createEntry(player, viewer))
+//        }
+//
+//        tablistService.removePlayer(player, player.uniqueId)
+//        tablistService.addPlayer(player, tablistService.createEntry(player, player))
+        // As velocity has no chat session api, we cannot update the tablist entries properly yet. Currently, it will cause the chat validation to fail.
+        // [00:21:47] [Render thread/ERROR]: Received chat message from 1c779cb1-3860-4e23-9cac-7f160b2acc61, but they have no chat session initialized and secure chat is enforced
     }
 }
