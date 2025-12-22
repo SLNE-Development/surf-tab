@@ -14,7 +14,7 @@ class ConnectionListener {
     fun onPostConnect(event: ServerPostConnectEvent) {
         plugin.proxy.scheduler.buildTask(plugin, Runnable {
             handleJoin(event.player)
-        }).delay(300, TimeUnit.MILLISECONDS).schedule()
+        }).delay(750, TimeUnit.MILLISECONDS).schedule()
     }
 
     private fun handleJoin(player: Player) {
