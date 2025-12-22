@@ -11,6 +11,7 @@ import dev.slne.surf.tab.velocity.util.getServers
 import dev.slne.surf.tab.velocity.util.toTabProfile
 import dev.slne.surf.tab.velocity.util.toVelocity
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 val tablistService = VelocityTablistService()
 
@@ -46,4 +47,19 @@ class VelocityTablistService {
         gameMode = TabGameMode.SURVIVAL,
         weight = LuckPermsHook.getWeight(target.uniqueId)
     )
+
+    fun updatePlayerInTablist(player: Player) {
+        val server = player.currentServer.getOrNull()?.server ?: return
+
+        val seenServers = tablistService.getSeenServers(server)
+        val viewers = seenServers.flatMap { it.playersConnected }.distinct()
+
+        viewers.forEach { viewer ->
+            tablistService.removePlayer(viewer, player.uniqueId)
+            tablistService.addPlayer(viewer, tablistService.createEntry(player, viewer))
+        }
+
+        tablistService.removePlayer(player, player.uniqueId)
+        tablistService.addPlayer(player, tablistService.createEntry(player, player))
+    }
 }
