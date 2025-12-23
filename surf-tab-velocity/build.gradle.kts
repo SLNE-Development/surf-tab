@@ -21,7 +21,7 @@ dependencies {
     compileOnly(libs.mini.placeholders.kotlin)
     compileOnly(libs.luckperms.api)
 
-    implementation("dev.slne:surf-redis:1.0.0-SNAPSHOT")
+    implementation("dev.slne:surf-redis:1.0.0-20251223.105653-21")
 
     api(project(":surf-tab-api"))
 }

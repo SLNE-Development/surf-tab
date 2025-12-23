@@ -34,6 +34,7 @@ class VelocityTablistService {
     }
 
     fun sendCurrentTablist(player: Player) {
+        println("Sending current tablist to player ${player.username}: ${entries.map { it.profile.name }}")
         entries.forEach { entry ->
             addPlayer(player, entry)
         }
