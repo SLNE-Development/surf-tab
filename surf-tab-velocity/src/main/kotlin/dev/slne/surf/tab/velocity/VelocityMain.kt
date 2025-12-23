@@ -4,9 +4,12 @@ import com.github.shynixn.mccoroutine.velocity.SuspendingPluginContainer
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
+import dev.slne.redis.RedisApi
+import dev.slne.redis.libs.io.lettuce.core.RedisURI
 import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.config.TablistConfigProvider
 import dev.slne.surf.tab.velocity.hook.LuckPermsHook
@@ -36,7 +39,13 @@ class VelocityMain @Inject constructor(
 
         startTask()
 
+        redisApi = RedisApi.create(RedisURI.create(tablistConfig.redisUrl)).connect()
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
+    }
+
+    @Subscribe
+    fun onProxyShutdown(event: ProxyShutdownEvent) {
+        redisApi.disconnect()
     }
 
     fun startTask() {
@@ -49,9 +58,11 @@ class VelocityMain @Inject constructor(
 
     companion object {
         lateinit var instance: VelocityMain
+        lateinit var redisApi: RedisApi
     }
 }
 
 val tablistConfiguration = TablistConfigProvider()
 val tablistConfig get() = tablistConfiguration.config
 val plugin get() = VelocityMain.instance
+val redisApi get() = VelocityMain.redisApi

@@ -1,7 +1,9 @@
 package dev.slne.surf.tab.api.entry
 
+import kotlinx.serialization.Serializable
 import net.kyori.adventure.text.Component
 
+@Serializable
 data class TabEntry(
     val profile: TabProfile,
     val displayName: Component,
