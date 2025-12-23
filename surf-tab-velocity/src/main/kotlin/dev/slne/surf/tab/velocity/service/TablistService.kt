@@ -2,6 +2,7 @@ package dev.slne.surf.tab.velocity.service
 
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.server.RegisteredServer
+import dev.slne.surf.surfapi.core.api.util.mutableObjectSetOf
 import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.api.entry.TabGameMode
 import dev.slne.surf.tab.velocity.hook.LuckPermsHook
@@ -15,6 +16,8 @@ import java.util.*
 val tablistService = VelocityTablistService()
 
 class VelocityTablistService {
+    val entries = mutableObjectSetOf<TabEntry>()
+
     fun addPlayer(viewer: Player, entry: TabEntry) {
         viewer.tabList.addEntry(entry.toVelocity(viewer.tabList))
     }
@@ -30,6 +33,12 @@ class VelocityTablistService {
         )
     }
 
+    fun sendCurrentTablist(player: Player) {
+        entries.forEach { entry ->
+            addPlayer(player, entry)
+        }
+    }
+
     fun getSeenServers(base: RegisteredServer): List<RegisteredServer> {
         val groups = tablistConfig.groups.map { it.toTabGroup() }
 
@@ -39,9 +48,9 @@ class VelocityTablistService {
             .distinct()
     }
 
-    fun createEntry(target: Player, viewer: Player) = TabEntry(
+    fun createEntry(target: Player) = TabEntry(
         profile = target.gameProfile.toTabProfile(),
-        displayName = tablistConfig.nameFormat.formatWithAdventure(target, viewer),
+        displayName = tablistConfig.nameFormat.formatWithAdventure(target),
         ping = target.ping.toInt(),
         gameMode = TabGameMode.SURVIVAL,
         weight = LuckPermsHook.getWeight(target.uniqueId)

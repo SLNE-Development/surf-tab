@@ -5,6 +5,9 @@ import com.velocitypowered.api.event.connection.DisconnectEvent
 import com.velocitypowered.api.event.player.ServerPostConnectEvent
 import com.velocitypowered.api.proxy.Player
 import dev.slne.surf.tab.velocity.plugin
+import dev.slne.surf.tab.velocity.redis.event.TabEntryAddRedisEvent
+import dev.slne.surf.tab.velocity.redis.event.TabEntryRemoveRedisEvent
+import dev.slne.surf.tab.velocity.redisApi
 import dev.slne.surf.tab.velocity.service.tablistService
 import java.util.concurrent.TimeUnit
 import kotlin.jvm.optionals.getOrNull
@@ -20,24 +23,14 @@ class ConnectionListener {
     private fun handleJoin(player: Player) {
         val server = player.currentServer.getOrNull()?.server ?: return
 
-        val seenServers = tablistService.getSeenServers(server)
-        val visiblePlayers = seenServers.flatMap { it.playersConnected }
+        redisApi.publishEvent(
+            TabEntryAddRedisEvent(
+                tablistService.createEntry(player), server
+            )
+        )
 
         tablistService.sendAdditions(player)
-
-        visiblePlayers.forEach { other ->
-            tablistService.addPlayer(
-                player,
-                tablistService.createEntry(other, player)
-            )
-        }
-
-        visiblePlayers.forEach { other ->
-            tablistService.addPlayer(
-                other,
-                tablistService.createEntry(player, other)
-            )
-        }
+        tablistService.sendCurrentTablist(player)
     }
 
     @Subscribe
@@ -45,10 +38,10 @@ class ConnectionListener {
         val player = event.player
         val server = player.currentServer.getOrNull()?.server ?: return
 
-        tablistService.getSeenServers(server)
-            .flatMap { it.playersConnected }
-            .forEach { other ->
-                tablistService.removePlayer(other, player.uniqueId)
-            }
+        redisApi.publishEvent(
+            TabEntryRemoveRedisEvent(
+                player.uniqueId, server
+            )
+        )
     }
 }

@@ -9,11 +9,11 @@ import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
 import dev.slne.redis.RedisApi
-import dev.slne.redis.libs.io.lettuce.core.RedisURI
 import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.config.TablistConfigProvider
 import dev.slne.surf.tab.velocity.hook.LuckPermsHook
 import dev.slne.surf.tab.velocity.listener.ConnectionListener
+import dev.slne.surf.tab.velocity.redis.TabRedisEventListener
 import dev.slne.surf.tab.velocity.service.tablistService
 import org.slf4j.Logger
 import java.nio.file.Path
@@ -33,14 +33,16 @@ class VelocityMain @Inject constructor(
     @Subscribe
     fun onInitialization(event: ProxyInitializeEvent) {
         instance = this
+        redisApi = RedisApi.create(dataPath)
 
         surfTabCommand()
         LuckPermsHook.load()
-
         startTask()
 
-        redisApi = RedisApi.create(RedisURI.create(tablistConfig.redisUrl)).connect()
+        redisApi.subscribeToEvents(TabRedisEventListener)
+
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
+        redisApi.freezeAndConnect()
     }
 
     @Subscribe
