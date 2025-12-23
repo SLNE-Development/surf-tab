@@ -15,6 +15,10 @@ import kotlin.jvm.optionals.getOrNull
 class ConnectionListener {
     @Subscribe
     fun onPostConnect(event: ServerPostConnectEvent) {
+        event.previousServer?.let {
+            redisApi.publishEvent(TabEntryRemoveRedisEvent(event.player.uniqueId, it))
+        }
+
         plugin.proxy.scheduler.buildTask(plugin, Runnable {
             handleJoin(event.player)
         }).delay(750, TimeUnit.MILLISECONDS).schedule()
