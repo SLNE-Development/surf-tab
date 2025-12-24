@@ -2,6 +2,7 @@ package dev.slne.surf.tab.velocity.listener
 
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.DisconnectEvent
+import com.velocitypowered.api.event.player.KickedFromServerEvent
 import com.velocitypowered.api.event.player.ServerPostConnectEvent
 import com.velocitypowered.api.proxy.Player
 import dev.slne.surf.tab.velocity.plugin
@@ -41,6 +42,18 @@ class ConnectionListener {
     fun onDisconnect(event: DisconnectEvent) {
         val player = event.player
         val server = player.currentServer.getOrNull()?.server ?: return
+
+        redisApi.publishEvent(
+            TabEntryRemoveRedisEvent(
+                player.uniqueId, server
+            )
+        )
+    }
+
+    @Subscribe
+    fun onKick(event: KickedFromServerEvent) {
+        val player = event.player
+        val server = event.server
 
         redisApi.publishEvent(
             TabEntryRemoveRedisEvent(

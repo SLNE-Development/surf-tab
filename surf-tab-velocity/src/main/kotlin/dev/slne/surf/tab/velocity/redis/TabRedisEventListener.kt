@@ -21,6 +21,7 @@ object TabRedisEventListener {
 
     @OnRedisEvent
     fun onTabEntryRemove(event: TabEntryRemoveRedisEvent) {
+        println("Removing tab entry for UUID ${event.profileUuid} from tablist via Redis event")
         val server = event.baseServer
         val seenServers = tablistService.getSeenServers(server)
         val visiblePlayers = seenServers.flatMap { it.playersConnected }
