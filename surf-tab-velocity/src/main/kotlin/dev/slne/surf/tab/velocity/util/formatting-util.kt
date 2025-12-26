@@ -38,7 +38,7 @@ private fun dynamicResolver(player: Player): TagResolver =
         },
         TagResolver.resolver("players_online") { _, _ ->
             Tag.inserting {
-                buildText { info(plugin.proxy.allPlayers.size) }
+                buildText { info(plugin.proxy.playerCount) }
             }
         },
         TagResolver.resolver("players_max") { _, _ ->
