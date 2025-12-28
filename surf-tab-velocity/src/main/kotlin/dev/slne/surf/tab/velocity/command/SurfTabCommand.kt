@@ -16,7 +16,7 @@ fun surfTabCommand() = commandTree("surftab") {
             tablistConfiguration.reload()
 
             plugin.proxy.allPlayers.forEach {
-                tablistService.updatePlayerInTablist(it)
+                tablistService.updateOthersFor(it)
             }
 
             executor.sendText {

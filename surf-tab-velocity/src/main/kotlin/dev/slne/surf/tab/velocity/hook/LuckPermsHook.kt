@@ -32,8 +32,6 @@ object LuckPermsHook {
 
     private fun updatePlayerInTablist(user: User) {
         val player = plugin.proxy.getPlayer(user.uniqueId).getOrNull() ?: return
-        tablistService.updatePlayerInTablist(player)
+        tablistService.updateForOthers(player)
     }
-
-
 }
