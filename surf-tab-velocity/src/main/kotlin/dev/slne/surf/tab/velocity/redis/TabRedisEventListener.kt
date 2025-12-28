@@ -17,7 +17,10 @@ object TabRedisEventListener {
         val seenServers = tablistService.getSeenServers(server)
         val visiblePlayers = seenServers.flatMap { it.playersConnected }
 
-        tablistService.entries.add(event.tabEntry)
+        seenServers.forEach {
+            tablistService.entries[it] =
+                tablistService.entries.getOrDefault(it, mutableListOf()) + event.tabEntry
+        }
 
         visiblePlayers.forEach {
             tablistService.addPlayer(it, event.tabEntry)
@@ -26,12 +29,18 @@ object TabRedisEventListener {
 
     @OnRedisEvent
     fun onTabEntryRemove(event: TabEntryRemoveRedisEvent) {
-        println("Removing tab entry for UUID ${event.profileUuid} from tablist via Redis event")
         val server = event.baseServer
         val seenServers = tablistService.getSeenServers(server)
         val visiblePlayers = seenServers.flatMap { it.playersConnected }
 
-        tablistService.entries.removeIf { it.profile.uuid == event.profileUuid }
+        seenServers.forEach { server ->
+            tablistService.entries[server]?.forEach {
+                if (it.profile.uuid == event.profileUuid) {
+                    tablistService.entries[server] =
+                        tablistService.entries[server]?.filter { entry -> entry.profile.uuid != event.profileUuid }
+                }
+            }
+        }
 
         visiblePlayers.forEach {
             tablistService.removePlayer(it, event.profileUuid)
@@ -47,7 +56,9 @@ object TabRedisEventListener {
     @OnRedisEvent
     fun onTabShow(event: TabShowRedisEvent) {
         val player = plugin.proxy.getPlayer(event.player).getOrNull() ?: return
-        val entry = tablistService.entries.find { it.profile.uuid == event.toShow } ?: return
+        val server = player.currentServer.getOrNull()?.server ?: return
+        val entry =
+            tablistService.entries[server]?.find { it.profile.uuid == event.toShow } ?: return
 
         player.tabList.addEntry(entry.toVelocity(player.tabList))
     }
