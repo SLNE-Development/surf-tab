@@ -60,6 +60,6 @@ object TabRedisEventListener {
         val entry =
             tablistService.entries[server]?.find { it.profile.uuid == event.toShow } ?: return
 
-        player.tabList.addEntry(entry.toVelocity(player.tabList))
+        player.tabList.addEntry(entry.toVelocity(player.tabList))// TODO: Not working with multiproxy support
     }
 }
