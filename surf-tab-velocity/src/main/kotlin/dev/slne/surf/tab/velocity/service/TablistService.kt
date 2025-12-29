@@ -3,6 +3,7 @@ package dev.slne.surf.tab.velocity.service
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.server.RegisteredServer
 import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
+import dev.slne.surf.surfapi.core.api.util.toMutableObjectList
 import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.api.entry.TabGameMode
 import dev.slne.surf.tab.velocity.hook.LuckPermsHook
@@ -43,11 +44,13 @@ class VelocityTablistService {
 
     fun getSeenServers(base: RegisteredServer): List<RegisteredServer> {
         val groups = tablistConfig.groups.map { it.toTabGroup() }
-
-        return groups
+        val servers = groups
             .filter { base in it.getServers() }
-            .flatMap { it.getServers() }
-            .distinct()
+            .flatMap { it.getServers() }.distinct().toMutableObjectList()
+
+        servers.add(base)
+
+        return servers
     }
 
     fun createEntry(target: Player) = TabEntry(
