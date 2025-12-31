@@ -6,6 +6,6 @@ import kotlinx.serialization.Serializable
 import java.util.*
 
 @Serializable
-data class TabEntryAddRedisEvent(
-    val toAddUuid: @Contextual UUID
+data class TabEntryUpdateRedisEvent(
+    val toUpdateUuid: @Contextual UUID
 ) : RedisEvent()

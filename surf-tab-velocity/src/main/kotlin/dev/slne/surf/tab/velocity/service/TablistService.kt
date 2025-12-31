@@ -2,16 +2,14 @@ package dev.slne.surf.tab.velocity.service
 
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.server.RegisteredServer
+import dev.slne.clan.api.surfClanApi
 import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
-import dev.slne.surf.surfapi.core.api.util.toMutableObjectList
 import dev.slne.surf.tab.api.entry.TabEntry
-import dev.slne.surf.tab.api.entry.TabGameMode
 import dev.slne.surf.tab.velocity.hook.LuckPermsHook
+import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.tablistConfig
 import dev.slne.surf.tab.velocity.util.formatWithAdventure
-import dev.slne.surf.tab.velocity.util.getServers
-import dev.slne.surf.tab.velocity.util.toTabProfile
-import dev.slne.surf.tab.velocity.util.toVelocity
+import net.kyori.adventure.text.minimessage.MiniMessage
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
@@ -20,14 +18,6 @@ val tablistService = VelocityTablistService()
 class VelocityTablistService {
     val entries = mutableObject2ObjectMapOf<RegisteredServer, List<TabEntry>>()
 
-    fun addPlayer(viewer: Player, entry: TabEntry) {
-        viewer.tabList.addEntry(entry.toVelocity(viewer.tabList))
-    }
-
-    fun removePlayer(viewer: Player, entryUuid: UUID) {
-        viewer.tabList.removeEntry(entryUuid)
-    }
-
     fun sendAdditions(player: Player) {
         player.sendPlayerListHeaderAndFooter(
             tablistConfig.header.formatWithAdventure(player),
@@ -35,46 +25,57 @@ class VelocityTablistService {
         )
     }
 
-    fun sendCurrentTablist(player: Player) {
-        val currentServer = player.currentServer.getOrNull()?.server ?: return
-        entries[currentServer]?.forEach { entry ->
-            addPlayer(player, entry)
+
+    suspend fun formatOnlinePlayers(viewer: Player) {
+        viewer.tabList.entries.forEach { entry ->
+            viewer.tabList.addEntry(entry.apply {
+                setDisplayName(formatDisplayName(entry.profile.id, entry.profile.name))
+                listOrder = LuckPermsHook.getWeight(entry.profile.id)
+            })
         }
     }
 
-    fun getSeenServers(base: RegisteredServer): List<RegisteredServer> {
-        val groups = tablistConfig.groups.map { it.toTabGroup() }
-        val servers = groups
-            .filter { base in it.getServers() }
-            .flatMap { it.getServers() }.distinct().toMutableObjectList()
+    suspend fun reformatPlayerForOnlinePlayers(targetPlayerUuid: UUID) {
+        plugin.proxy.allPlayers.forEach { viewer ->
+            val tablist = viewer.tabList
+            val entry = tablist.getEntry(targetPlayerUuid).getOrNull() ?: return@forEach
 
-        servers.add(base)
-
-        return servers
+            tablist.addEntry(entry.apply {
+                setDisplayName(formatDisplayName(entry.profile.id, entry.profile.name))
+                listOrder = LuckPermsHook.getWeight(entry.profile.id)
+            })
+        }
     }
 
-    fun createEntry(target: Player) = TabEntry(
-        profile = target.gameProfile.toTabProfile(),
-        displayName = tablistConfig.nameFormat.formatWithAdventure(target),
-        ping = target.ping.toInt(),
-        gameMode = TabGameMode.SURVIVAL,
-        weight = LuckPermsHook.getWeight(target.uniqueId)
-    )
+    suspend fun formatNewPlayer(viewer: Player, newPlayerUuid: UUID) {
+        val tablist = viewer.tabList
+        val entry = tablist.getEntry(newPlayerUuid).getOrNull() ?: return
 
-    fun updatePlayerInTablist(player: Player) {
-//        val server = player.currentServer.getOrNull()?.server ?: return
-//
-//        val seenServers = tablistService.getSeenServers(server)
-//        val viewers = seenServers.flatMap { it.playersConnected }.distinct()
-//
-//        viewers.forEach { viewer ->
-//            tablistService.removePlayer(viewer, player.uniqueId)
-//            tablistService.addPlayer(viewer, tablistService.createEntry(player, viewer))
-//        }
-//
-//        tablistService.removePlayer(player, player.uniqueId)
-//        tablistService.addPlayer(player, tablistService.createEntry(player, player))
-        // As velocity has no chat session api, we cannot update the tablist entries properly yet. Currently, it will cause the chat validation to fail.
-        // [00:21:47] [Render thread/ERROR]: Received chat message from 1c779cb1-3860-4e23-9cac-7f160b2acc61, but they have no chat session initialized and secure chat is enforced
+        tablist.addEntry(entry.apply {
+            setDisplayName(formatDisplayName(entry.profile.id, entry.profile.name))
+            listOrder = LuckPermsHook.getWeight(entry.profile.id)
+        })
     }
+
+    fun formatLostPlayer(viewer: Player, lostPlayerUuid: UUID) {
+        val tablist = viewer.tabList
+        val entry = tablist.getEntry(lostPlayerUuid).getOrNull() ?: return
+
+        tablist.removeEntry(entry.profile.id)
+    }
+
+    private suspend fun formatDisplayName(playerUuid: UUID, name: String) =
+        MiniMessage.miniMessage()
+            .deserialize(
+                LuckPermsHook.getPrefix(playerUuid) +
+                        name +
+                        LuckPermsHook.getSuffix(playerUuid) +
+                        " " +
+                        "${getClanTag(playerUuid)}"
+            )
+
+    private fun getClanTag(playerUuid: UUID) =
+        if (plugin.proxy.pluginManager.isLoaded("surf-clan-velocity")) surfClanApi.renderClanTag(
+            playerUuid
+        ) else ""
 }

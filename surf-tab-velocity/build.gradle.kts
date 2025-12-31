@@ -13,6 +13,9 @@ velocityPluginFile {
     pluginDependencies {
         register("miniplaceholders")
         register("luckperms")
+        register("surf-clan-velocity") {
+            optional = true
+        }
     }
 }
 
@@ -21,4 +24,5 @@ dependencies {
     compileOnly(libs.mini.placeholders.kotlin)
     compileOnly(libs.luckperms.api)
     api(project(":surf-tab-api"))
+    compileOnly("dev.slne.surf.clan:surf-clan-api:1.21.11-1.3.0-SNAPSHOT")
 }
