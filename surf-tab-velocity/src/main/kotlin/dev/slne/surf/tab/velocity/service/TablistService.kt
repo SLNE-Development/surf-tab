@@ -1,10 +1,7 @@
 package dev.slne.surf.tab.velocity.service
 
 import com.velocitypowered.api.proxy.Player
-import com.velocitypowered.api.proxy.server.RegisteredServer
 import dev.slne.clan.api.surfClanApi
-import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
-import dev.slne.surf.tab.api.entry.TabEntry
 import dev.slne.surf.tab.velocity.hook.LuckPermsHook
 import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.tablistConfig
@@ -16,8 +13,6 @@ import kotlin.jvm.optionals.getOrNull
 val tablistService = VelocityTablistService()
 
 class VelocityTablistService {
-    val entries = mutableObject2ObjectMapOf<RegisteredServer, List<TabEntry>>()
-
     fun sendAdditions(player: Player) {
         player.sendPlayerListHeaderAndFooter(
             tablistConfig.header.formatWithAdventure(player),

@@ -8,7 +8,6 @@ import com.velocitypowered.api.event.player.ServerPostConnectEvent
 import com.velocitypowered.api.proxy.Player
 import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.redis.event.TabEntryAddRedisEvent
-import dev.slne.surf.tab.velocity.redis.event.TabEntryRemoveRedisEvent
 import dev.slne.surf.tab.velocity.redisApi
 import dev.slne.surf.tab.velocity.service.tablistService
 import java.util.concurrent.TimeUnit
@@ -16,10 +15,6 @@ import java.util.concurrent.TimeUnit
 class ConnectionListener {
     @Subscribe
     fun onPostConnect(event: ServerPostConnectEvent) {
-        event.previousServer?.let {
-            redisApi.publishEvent(TabEntryRemoveRedisEvent(event.player.uniqueId))
-        }
-
         plugin.proxy.scheduler.buildTask(plugin, Runnable {
             handleJoin(event.player)
         }).delay(750, TimeUnit.MILLISECONDS).schedule()
@@ -43,21 +38,11 @@ class ConnectionListener {
     fun onDisconnect(event: DisconnectEvent) {
         val player = event.player
 
-        redisApi.publishEvent(
-            TabEntryRemoveRedisEvent(
-                player.uniqueId
-            )
-        )
+
     }
 
     @Subscribe
     fun onKick(event: KickedFromServerEvent) {
         val player = event.player
-
-        redisApi.publishEvent(
-            TabEntryRemoveRedisEvent(
-                player.uniqueId
-            )
-        )
     }
 }
