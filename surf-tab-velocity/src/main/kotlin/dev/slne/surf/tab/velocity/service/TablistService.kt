@@ -66,11 +66,14 @@ class VelocityTablistService {
                         name +
                         LuckPermsHook.getSuffix(playerUuid) +
                         " " +
-                        "${getClanTag(playerUuid)}"
+                        getClanTag(playerUuid)
             )
 
     private fun getClanTag(playerUuid: UUID) =
-        if (plugin.proxy.pluginManager.isLoaded("surf-clan-velocity")) surfClanApi.renderClanTag(
-            playerUuid
-        ) else ""
+        if (plugin.proxy.pluginManager.isLoaded("surf-clan-velocity")) MiniMessage.miniMessage()
+            .serialize(
+                surfClanApi.renderClanTag(
+                    playerUuid
+                )
+            ) else ""
 }

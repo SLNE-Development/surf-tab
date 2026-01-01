@@ -1,7 +1,7 @@
 package dev.slne.surf.tab.velocity.hook
 
+import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
 import dev.slne.surf.tab.velocity.plugin
-import dev.slne.surf.tab.velocity.redis.event.TabEntryUpdateRedisEvent
 import dev.slne.surf.tab.velocity.redisApi
 import kotlinx.coroutines.future.await
 import net.luckperms.api.LuckPermsProvider
