@@ -6,6 +6,10 @@ repositories {
     maven("https://repo.william278.net/releases/")
 }
 
+surfVelocityApi {
+    withSurfRedis()
+}
+
 velocityPluginFile {
     main = "dev.slne.surf.tab.velocity.VelocityMain"
     authors = listOf("red")

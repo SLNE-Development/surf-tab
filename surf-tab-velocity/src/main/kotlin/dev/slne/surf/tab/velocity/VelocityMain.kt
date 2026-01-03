@@ -36,7 +36,7 @@ class VelocityMain @Inject constructor(
     @Subscribe
     fun onInitialization(event: ProxyInitializeEvent) {
         instance = this
-        redisApi = RedisApi.create(dataPath)
+        redisApi = RedisApi.create()
 
         surfTabCommand()
         LuckPermsHook.load()
