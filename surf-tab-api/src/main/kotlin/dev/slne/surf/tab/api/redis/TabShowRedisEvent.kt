@@ -1,4 +1,4 @@
-package dev.slne.surf.tab.velocity.redis.event
+package dev.slne.surf.tab.api.redis
 
 import dev.slne.surf.redis.event.RedisEvent
 import kotlinx.serialization.Contextual
@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 import java.util.*
 
 @Serializable
-data class TabEntryAddRedisEvent(
-    val toAddUuid: @Contextual UUID
+data class TabShowRedisEvent(
+    val player: @Contextual UUID,
+    val toShow: @Contextual UUID
 ) : RedisEvent()

@@ -8,7 +8,10 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
-import dev.slne.redis.RedisApi
+import dev.slne.clan.api.ClanModificationListener
+import dev.slne.clan.api.surfClanApi
+import dev.slne.surf.redis.RedisApi
+import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
 import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.config.TablistConfigProvider
 import dev.slne.surf.tab.velocity.hook.LuckPermsHook
@@ -33,7 +36,7 @@ class VelocityMain @Inject constructor(
     @Subscribe
     fun onInitialization(event: ProxyInitializeEvent) {
         instance = this
-        redisApi = RedisApi.create(dataPath)
+        redisApi = RedisApi.create()
 
         surfTabCommand()
         LuckPermsHook.load()
@@ -43,6 +46,12 @@ class VelocityMain @Inject constructor(
 
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
         redisApi.freezeAndConnect()
+
+        surfClanApi.addClanModificationListener(ClanModificationListener {
+            it.members.map { member -> member.uuid }.forEach { memberUuid ->
+                redisApi.publishEvent(TabEntryUpdateRedisEvent(memberUuid))
+            }
+        })
     }
 
     @Subscribe

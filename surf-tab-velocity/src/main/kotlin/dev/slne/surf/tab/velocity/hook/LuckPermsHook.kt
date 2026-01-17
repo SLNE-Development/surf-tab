@@ -1,22 +1,34 @@
 package dev.slne.surf.tab.velocity.hook
 
+import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
 import dev.slne.surf.tab.velocity.plugin
-import dev.slne.surf.tab.velocity.service.tablistService
+import dev.slne.surf.tab.velocity.redisApi
+import kotlinx.coroutines.future.await
 import net.luckperms.api.LuckPermsProvider
 import net.luckperms.api.event.node.NodeAddEvent
 import net.luckperms.api.event.node.NodeRemoveEvent
 import net.luckperms.api.model.user.User
 import java.util.*
-import kotlin.jvm.optionals.getOrNull
 
 object LuckPermsHook {
     private val luckPerms by lazy {
         LuckPermsProvider.get()
     }
 
-    fun getWeight(player: UUID) =
-        luckPerms.userManager.getUser(player)?.cachedData?.metaData?.getMetaValue("weight")
-            ?.toInt() ?: 0
+    suspend fun getPrefix(player: UUID) =
+        getOrLoadUser(player).primaryGroup.let {
+            luckPerms.groupManager.getGroup(it)?.cachedData?.metaData?.prefix ?: ""
+        }
+
+    suspend fun getSuffix(player: UUID) =
+        getOrLoadUser(player).primaryGroup.let {
+            luckPerms.groupManager.getGroup(it)?.cachedData?.metaData?.suffix ?: ""
+        }
+
+    suspend fun getWeight(player: UUID) =
+        getOrLoadUser(player).primaryGroup.let {
+            luckPerms.groupManager.getGroup(it)?.weight?.orElse(0) ?: 0
+        }
 
     fun load() {
         luckPerms.eventBus.subscribe(plugin, NodeAddEvent::class.java) { event ->
@@ -30,10 +42,12 @@ object LuckPermsHook {
         }
     }
 
-    private fun updatePlayerInTablist(user: User) {
-        val player = plugin.proxy.getPlayer(user.uniqueId).getOrNull() ?: return
-        tablistService.updatePlayerInTablist(player)
+    suspend fun getOrLoadUser(player: UUID): User {
+        return luckPerms.userManager.getUser(player) ?: luckPerms.userManager.loadUser(player)
+            .await()
     }
 
-
+    private fun updatePlayerInTablist(user: User) {
+        redisApi.publishEvent(TabEntryUpdateRedisEvent(user.uniqueId))
+    }
 }

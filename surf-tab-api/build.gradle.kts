@@ -1,3 +1,8 @@
 plugins {
-    id("dev.slne.surf.surfapi.gradle.velocity")
+    id("dev.slne.surf.surfapi.gradle.core")
+}
+
+
+surfCoreApi {
+    withSurfRedis()
 }
