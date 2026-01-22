@@ -14,7 +14,7 @@ fun surfTabCommand() = commandTree("surftab") {
             tablistConfiguration.reload()
 
             executor.sendText {
-                appendPrefix()
+                appendSuccessPrefix()
                 success("Die Tablist wurde neu geladen.")
             }
         }
