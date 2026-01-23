@@ -8,8 +8,12 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
-import dev.slne.clan.api.ClanModificationListener
-import dev.slne.clan.api.surfClanApi
+import dev.slne.clan.api.clan.Clan
+import dev.slne.clan.api.clan.ClanView
+import dev.slne.clan.api.clan.listener.ClanCreatedListener
+import dev.slne.clan.api.clan.listener.ClanDeletedListener
+import dev.slne.clan.api.clan.listener.ClanUpdateMemberListener
+import dev.slne.clan.api.clan.listener.ClanUpdatedListener
 import dev.slne.surf.redis.RedisApi
 import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
 import dev.slne.surf.tab.velocity.command.surfTabCommand
@@ -20,6 +24,7 @@ import dev.slne.surf.tab.velocity.redis.TabRedisEventListener
 import dev.slne.surf.tab.velocity.service.tablistService
 import org.slf4j.Logger
 import java.nio.file.Path
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class VelocityMain @Inject constructor(
@@ -47,9 +52,35 @@ class VelocityMain @Inject constructor(
         plugin.proxy.eventManager.register(plugin, ConnectionListener())
         redisApi.freezeAndConnect()
 
-        surfClanApi.addClanModificationListener(ClanModificationListener {
-            it.members.map { member -> member.uuid }.forEach { memberUuid ->
-                redisApi.publishEvent(TabEntryUpdateRedisEvent(memberUuid))
+        Clan.registerListener(object : ClanCreatedListener {
+            override fun onClanCreated(clan: Clan) {
+                clan.members.map { member -> member.uuid }.forEach { memberUuid ->
+                    redisApi.publishEvent(TabEntryUpdateRedisEvent(memberUuid))
+                }
+            }
+        })
+
+        Clan.registerListener(object : ClanUpdatedListener {
+            override fun onClanUpdated(clan: Clan) {
+                clan.members.map { member -> member.uuid }.forEach { memberUuid ->
+                    redisApi.publishEvent(TabEntryUpdateRedisEvent(memberUuid))
+                }
+            }
+        })
+
+        Clan.registerListener(object : ClanUpdateMemberListener {
+            override fun onClanMemberUpdated(clan: Clan, memberUuid: UUID, added: Boolean) {
+                clan.members.map { member -> member.uuid }.forEach { memberUuid ->
+                    redisApi.publishEvent(TabEntryUpdateRedisEvent(memberUuid))
+                }
+            }
+        })
+        
+        Clan.registerListener(object : ClanDeletedListener {
+            override fun onClanDeleted(clan: ClanView) {
+                clan.members.map { member -> member.uuid }.forEach { memberUuid ->
+                    redisApi.publishEvent(TabEntryUpdateRedisEvent(memberUuid))
+                }
             }
         })
     }
