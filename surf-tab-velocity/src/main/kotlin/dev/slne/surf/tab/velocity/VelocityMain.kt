@@ -9,7 +9,9 @@ import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
 import dev.slne.clan.api.clan.Clan
+import dev.slne.clan.api.clan.ClanView
 import dev.slne.clan.api.clan.listener.ClanCreatedListener
+import dev.slne.clan.api.clan.listener.ClanDeletedListener
 import dev.slne.clan.api.clan.listener.ClanUpdateMemberListener
 import dev.slne.clan.api.clan.listener.ClanUpdatedListener
 import dev.slne.surf.redis.RedisApi
@@ -68,6 +70,14 @@ class VelocityMain @Inject constructor(
 
         Clan.registerListener(object : ClanUpdateMemberListener {
             override fun onClanMemberUpdated(clan: Clan, memberUuid: UUID, added: Boolean) {
+                clan.members.map { member -> member.uuid }.forEach { memberUuid ->
+                    redisApi.publishEvent(TabEntryUpdateRedisEvent(memberUuid))
+                }
+            }
+        })
+        
+        Clan.registerListener(object : ClanDeletedListener {
+            override fun onClanDeleted(clan: ClanView) {
                 clan.members.map { member -> member.uuid }.forEach { memberUuid ->
                     redisApi.publishEvent(TabEntryUpdateRedisEvent(memberUuid))
                 }
