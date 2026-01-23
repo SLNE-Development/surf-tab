@@ -1,7 +1,6 @@
 package dev.slne.surf.tab.velocity.service
 
 import com.velocitypowered.api.proxy.Player
-import dev.slne.clan.api.surfClanApi
 import dev.slne.surf.tab.velocity.hook.LuckPermsHook
 import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.tablistConfig
@@ -69,11 +68,11 @@ class VelocityTablistService {
                         getClanTag(playerUuid)
             )
 
-    private fun getClanTag(playerUuid: UUID) =
-        if (plugin.proxy.pluginManager.isLoaded("surf-clan-velocity")) MiniMessage.miniMessage()
-            .serialize(
-                surfClanApi.renderClanTag(
-                    playerUuid
-                )
-            ) else ""
+    private fun getClanTag(playerUuid: UUID) = ""
+//        if (plugin.proxy.pluginManager.isLoaded("surf-clan-velocity")) MiniMessage.miniMessage()
+//            .serialize(
+//                surfClanApi.renderClanTag(
+//                    playerUuid
+//                )
+//            ) else ""
 }
