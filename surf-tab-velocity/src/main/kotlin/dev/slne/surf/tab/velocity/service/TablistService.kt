@@ -1,10 +1,13 @@
 package dev.slne.surf.tab.velocity.service
 
 import com.velocitypowered.api.proxy.Player
+import dev.slne.clan.api.clan.Clan
+import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.tab.velocity.hook.LuckPermsHook
 import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.tablistConfig
 import dev.slne.surf.tab.velocity.util.formatWithAdventure
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
@@ -58,21 +61,18 @@ class VelocityTablistService {
         tablist.removeEntry(entry.profile.id)
     }
 
-    private suspend fun formatDisplayName(playerUuid: UUID, name: String) =
-        MiniMessage.miniMessage()
-            .deserialize(
-                LuckPermsHook.getPrefix(playerUuid) +
-                        name +
-                        LuckPermsHook.getSuffix(playerUuid) +
-                        " " +
-                        getClanTag(playerUuid)
+    private suspend fun formatDisplayName(playerUuid: UUID, name: String) = buildText {
+        append(
+            MiniMessage.miniMessage().deserialize(
+                LuckPermsHook.getPrefix(playerUuid) + name + LuckPermsHook.getSuffix(playerUuid)
             )
+        )
+        appendSpace()
+        append(getClanTag(playerUuid))
+    }
 
-    private fun getClanTag(playerUuid: UUID) = ""
-//        if (plugin.proxy.pluginManager.isLoaded("surf-clan-velocity")) MiniMessage.miniMessage()
-//            .serialize(
-//                surfClanApi.renderClanTag(
-//                    playerUuid
-//                )
-//            ) else ""
+
+    private suspend fun getClanTag(playerUuid: UUID) =
+        if (plugin.proxy.pluginManager.isLoaded("surf-clan-velocity")) Clan.byPlayer(playerUuid)
+            ?.renderClanTag(10) ?: Component.empty() else Component.empty()
 }
