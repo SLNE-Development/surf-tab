@@ -22,6 +22,8 @@ class VelocityTablistService {
         )
     }
 
+    fun isAfk(playerUuid: UUID) = plugin.afkPlayers.contains(playerUuid)
+
 
     suspend fun formatOnlinePlayers(viewer: Player) {
         viewer.tabList.entries.forEach { entry ->
@@ -69,6 +71,18 @@ class VelocityTablistService {
         )
         appendSpace()
         append(getClanTag(playerUuid))
+        append(getAfkTag(playerUuid))
+    }
+
+    private fun getAfkTag(playerUuid: UUID) = if (isAfk(playerUuid)) {
+        buildText {
+            appendSpace()
+            darkSpacer("[")
+            spacer("AFK")
+            darkSpacer("]")
+        }
+    } else {
+        Component.empty()
     }
 
 
