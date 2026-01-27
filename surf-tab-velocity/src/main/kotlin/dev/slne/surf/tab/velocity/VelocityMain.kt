@@ -16,6 +16,7 @@ import dev.slne.clan.api.clan.listener.ClanUpdateMemberListener
 import dev.slne.clan.api.clan.listener.ClanUpdatedListener
 import dev.slne.surf.redis.RedisApi
 import dev.slne.surf.redis.sync.set.SyncSet
+import dev.slne.surf.redis.sync.set.SyncSetChange
 import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
 import dev.slne.surf.tab.velocity.command.surfTabCommand
 import dev.slne.surf.tab.velocity.config.TablistConfigProvider
@@ -88,6 +89,20 @@ class VelocityMain @Inject constructor(
                 }
             }
         })
+
+        afkPlayers.addListener {
+            when (it) {
+                is SyncSetChange.Added<*> -> {
+                    redisApi.publishEvent(TabEntryUpdateRedisEvent(it.element as UUID))
+                }
+
+                is SyncSetChange.Removed<*> -> {
+                    redisApi.publishEvent(TabEntryUpdateRedisEvent(it.element as UUID))
+                }
+
+                else -> Unit
+            }
+        }
     }
 
     @Subscribe
