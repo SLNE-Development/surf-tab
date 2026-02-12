@@ -10,7 +10,9 @@ import dev.slne.surf.tab.api.redis.TabShowRedisEvent
 import dev.slne.surf.tab.velocity.plugin
 import dev.slne.surf.tab.velocity.redis.event.TabEntryAddRedisEvent
 import dev.slne.surf.tab.velocity.redis.event.TabEntryRemoveRedisEvent
+import dev.slne.surf.tab.velocity.redisApi
 import dev.slne.surf.tab.velocity.service.tablistService
+import dev.slne.surf.vanish.api.redis.VanishStateUpdateRedisEvent
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
@@ -59,5 +61,10 @@ object TabRedisEventListener {
         plugin.pluginContainer.launch {
             tablistService.reformatPlayerForOnlinePlayers(event.toUpdateUuid)
         }
+    }
+
+    @OnRedisEvent
+    fun onVanishUpdate(event: VanishStateUpdateRedisEvent) {
+        redisApi.publishEvent(TabEntryUpdateRedisEvent(event.player))
     }
 }
