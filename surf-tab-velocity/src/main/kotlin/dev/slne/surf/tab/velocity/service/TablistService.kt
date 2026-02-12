@@ -25,7 +25,6 @@ class VelocityTablistService {
     fun isAfk(playerUuid: UUID) = plugin.afkPlayers.contains(playerUuid)
     fun isVanished(playerUuid: UUID) = plugin.vanishedPlayers.contains(playerUuid)
 
-
     suspend fun formatOnlinePlayers(viewer: Player) {
         viewer.tabList.entries.forEach { entry ->
             viewer.tabList.addEntry(entry.apply {

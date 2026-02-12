@@ -29,5 +29,5 @@ dependencies {
     compileOnly(libs.luckperms.api)
     api(project(":surf-tab-api"))
     compileOnly(files("libs/surf-clan-api-1.21.11-1.3.0-SNAPSHOT.jar"))
-    implementation("dev.slne.surf.vanish:surf-vanish-api-redis:1.21.11-1.0.6-SNAPSHOT")
+    implementation("dev.slne.surf.vanish:surf-vanish-api-redis:1.21.11-1.0.7-SNAPSHOT")
 }
