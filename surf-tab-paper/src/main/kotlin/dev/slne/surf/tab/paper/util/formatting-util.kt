@@ -1,16 +1,14 @@
-package dev.slne.surf.tab.velocity.util
+package dev.slne.surf.tab.paper.util
 
-import com.velocitypowered.api.proxy.Player
-import dev.slne.surf.core.api.common.surfCoreApi
+import dev.slne.surf.core.api.common.server.SurfServer
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
-import dev.slne.surf.tab.api.entry.TabGroup
-import dev.slne.surf.tab.velocity.plugin
 import io.github.miniplaceholders.api.MiniPlaceholders
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
+import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.jvm.optionals.getOrNull
 
 private val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -27,28 +25,19 @@ fun String.formatWithAdventure(player: Player) =
         .replaceText {
             it.matchLiteral("<server>")
             it.replacement(buildText {
-                variableValue(
-                    player.currentServer.getOrNull()?.server?.serverInfo?.name
-                        ?: "N/A"
-                )
+                variableValue(SurfServer.current().name)
             })
         }
         .replaceText {
             it.matchLiteral("<players_online>")
             it.replacement(buildText {
-                info(
-                    player.currentServer.getOrNull()?.server?.playersConnected?.size ?: -1
-                )
+                info(Bukkit.getOnlinePlayers().size)
             })
         }
         .replaceText {
             it.matchLiteral("<players_max>")
             it.replacement(buildText {
-                info(
-                    player.currentServer.getOrNull()?.serverInfo?.name?.let { serverName ->
-                        surfCoreApi.getServerByName(serverName)?.maxPlayers
-                    } ?: -1
-                )
+                info(Bukkit.getMaxPlayers())
             })
         }
         .replaceText {
@@ -63,24 +52,3 @@ fun String.formatWithAdventure(player: Player) =
                 info(ZonedDateTime.now().format(timeFormatter))
             })
         }
-
-@Volatile
-private var cachedMinute = -1
-
-@Volatile
-private var cachedDate = ""
-
-@Volatile
-private var cachedTime = ""
-
-private fun updateTimeCache() {
-    val now = ZonedDateTime.now()
-    val minute = now.minute
-    if (minute != cachedMinute) {
-        cachedMinute = minute
-        cachedDate = now.format(dateFormatter)
-        cachedTime = now.format(timeFormatter)
-    }
-}
-
-fun TabGroup.getServers() = clients.mapNotNull { plugin.proxy.getServer(it).getOrNull() }

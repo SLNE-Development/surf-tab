@@ -1,8 +1,8 @@
-package dev.slne.surf.tab.velocity.config
+package dev.slne.surf.tab.paper.config
 
 import dev.slne.surf.surfapi.core.api.config.manager.SpongeConfigManager
 import dev.slne.surf.surfapi.core.api.config.surfConfigApi
-import dev.slne.surf.tab.velocity.plugin
+import dev.slne.surf.tab.paper.plugin
 
 class TablistConfigProvider {
     private val configManager: SpongeConfigManager<TablistConfig>
