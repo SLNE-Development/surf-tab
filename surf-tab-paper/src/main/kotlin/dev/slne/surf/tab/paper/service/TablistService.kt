@@ -1,5 +1,6 @@
 package dev.slne.surf.tab.paper.service
 
+import dev.slne.surf.core.api.common.server.SurfServer
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.tab.paper.hook.LuckPermsHook
 import dev.slne.surf.tab.paper.plugin
@@ -39,7 +40,8 @@ class VelocityTablistService {
     }
 
     fun isAfk(playerUuid: UUID) = redisLoader.afkPlayers.contains(playerUuid)
-    fun isVanished(playerUuid: UUID) = redisLoader.vanishedPlayers.contains(playerUuid)
+    fun isVanished(playerUuid: UUID) =
+        redisLoader.vanishedPlayers[SurfServer.current().name]?.contains(playerUuid) == true
 
     fun formatPlayer(player: Player) {
         player.playerListName(formatDisplayName(player))
