@@ -8,6 +8,7 @@ repositories {
 
 surfVelocityApi {
     withSurfRedis()
+    withCoreVelocity()
 }
 
 velocityPluginFile {
