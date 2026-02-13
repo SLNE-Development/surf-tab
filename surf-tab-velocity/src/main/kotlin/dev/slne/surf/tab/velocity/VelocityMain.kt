@@ -41,6 +41,7 @@ class VelocityMain @Inject constructor(
     }
 
     lateinit var afkPlayers: SyncSet<UUID>
+    lateinit var vanishedPlayers: SyncSet<UUID>
 
     @Subscribe
     fun onInitialization(event: ProxyInitializeEvent) {
@@ -52,6 +53,7 @@ class VelocityMain @Inject constructor(
         startTask()
 
         afkPlayers = redisApi.createSyncSet("surf-playtime:afk-players")
+        vanishedPlayers = redisApi.createSyncSet("vanished_players")
 
         redisApi.subscribeToEvents(TabRedisEventListener)
 
