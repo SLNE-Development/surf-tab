@@ -1,6 +1,7 @@
 package dev.slne.surf.tab.velocity.util
 
 import com.velocitypowered.api.proxy.Player
+import dev.slne.surf.core.api.common.surfCoreApi
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.tab.api.entry.TabGroup
 import dev.slne.surf.tab.velocity.plugin
@@ -36,7 +37,7 @@ fun String.formatWithAdventure(player: Player) =
             it.matchLiteral("<players_online>")
             it.replacement(buildText {
                 info(
-                    plugin.proxy.playerCount
+                    player.currentServer.getOrNull()?.server?.playersConnected?.size ?: -1
                 )
             })
         }
@@ -44,7 +45,9 @@ fun String.formatWithAdventure(player: Player) =
             it.matchLiteral("<players_max>")
             it.replacement(buildText {
                 info(
-                    plugin.proxy.configuration.showMaxPlayers
+                    player.currentServer.getOrNull()?.serverInfo?.name?.let { serverName ->
+                        surfCoreApi.getServerByName(serverName)?.maxPlayers
+                    } ?: -1
                 )
             })
         }
