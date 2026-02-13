@@ -23,7 +23,7 @@ class VelocityTablistService {
     }
 
     fun isAfk(playerUuid: UUID) = plugin.afkPlayers.contains(playerUuid)
-
+    fun isVanished(playerUuid: UUID) = plugin.vanishedPlayers.contains(playerUuid)
 
     suspend fun formatOnlinePlayers(viewer: Player) {
         viewer.tabList.entries.forEach { entry ->
@@ -64,6 +64,7 @@ class VelocityTablistService {
     }
 
     private suspend fun formatDisplayName(playerUuid: UUID, name: String) = buildText {
+        append(getVanishTag(playerUuid))
         append(
             MiniMessage.miniMessage().deserialize(
                 LuckPermsHook.getPrefix(playerUuid) + name + LuckPermsHook.getSuffix(playerUuid)
@@ -80,6 +81,17 @@ class VelocityTablistService {
             darkSpacer("[")
             spacer("AFK")
             darkSpacer("]")
+        }
+    } else {
+        Component.empty()
+    }
+
+    private fun getVanishTag(playerUuid: UUID) = if (isVanished(playerUuid)) {
+        buildText {
+            darkSpacer("[")
+            note("V")
+            darkSpacer("]")
+            appendSpace()
         }
     } else {
         Component.empty()
