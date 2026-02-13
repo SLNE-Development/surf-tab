@@ -1,10 +1,12 @@
 package dev.slne.surf.tab.paper.service
 
-import dev.slne.surf.core.api.common.server.SurfServer
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.tab.paper.hook.LuckPermsHook
+import dev.slne.surf.tab.paper.hook.SurfPlaytimeHook
+import dev.slne.surf.tab.paper.hook.SurfVanishHook
+import dev.slne.surf.tab.paper.isPlaytimeHook
+import dev.slne.surf.tab.paper.isVanishHook
 import dev.slne.surf.tab.paper.plugin
-import dev.slne.surf.tab.paper.redisLoader
 import dev.slne.surf.tab.paper.tablistConfig
 import dev.slne.surf.tab.paper.util.formatWithAdventure
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
@@ -39,9 +41,9 @@ class VelocityTablistService {
         )
     }
 
-    fun isAfk(playerUuid: UUID) = redisLoader.afkPlayers.contains(playerUuid)
+    fun isAfk(playerUuid: UUID) = if (isPlaytimeHook) SurfPlaytimeHook.isAfk(playerUuid) else false
     fun isVanished(playerUuid: UUID) =
-        redisLoader.vanishedPlayers[SurfServer.current().name]?.contains(playerUuid) == true
+        if (isVanishHook) SurfVanishHook.isVanished(playerUuid) else false
 
     fun formatPlayer(player: Player) {
         player.playerListName(formatDisplayName(player))
