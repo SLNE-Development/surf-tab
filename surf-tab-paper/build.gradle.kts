@@ -28,7 +28,7 @@ dependencies {
     compileOnly(libs.mini.placeholders.kotlin)
     compileOnly(libs.luckperms.api)
     api(project(":surf-tab-api"))
-    compileOnly("dev.slne.surf.vanish:surf-vanish-api-redis:1.21.11-1.0.9-SNAPSHOT")
+    implementation("dev.slne.surf.vanish:surf-vanish-api-redis:1.21.11-1.0.9-SNAPSHOT")
     compileOnly("dev.slne.surf.vanish:surf-vanish-api:1.21.11-1.0.9-SNAPSHOT")
     compileOnly("dev.slne.surf.playtime:surf-playtime-api:1.21.11-1.1.0-SNAPSHOT")
 }
