@@ -7,6 +7,7 @@ import dev.slne.surf.tab.paper.command.surfTabCommand
 import dev.slne.surf.tab.paper.config.TablistConfigProvider
 import dev.slne.surf.tab.paper.hook.LuckPermsHook
 import dev.slne.surf.tab.paper.listener.ConnectionListener
+import dev.slne.surf.tab.paper.listener.PlaytimeListener
 import dev.slne.surf.tab.paper.service.tablistService
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -21,6 +22,10 @@ class PaperMain : SuspendingJavaPlugin() {
         tablistService.startTask()
         LuckPermsHook.load()
         ConnectionListener.register()
+
+        if (isPlaytimeHook) {
+            PlaytimeListener.register()
+        }
     }
 
     override fun onDisable() {
