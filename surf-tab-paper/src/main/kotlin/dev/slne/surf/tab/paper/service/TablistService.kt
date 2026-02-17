@@ -59,12 +59,12 @@ class VelocityTablistService {
                 )
             )
         )
-        appendSpace()
         append(getAfkTag(player.uniqueId))
     }
 
     private fun getAfkTag(playerUuid: UUID) = if (isAfk(playerUuid)) {
         buildText {
+            appendSpace()
             darkSpacer("[")
             spacer("AFK")
             darkSpacer("]")
