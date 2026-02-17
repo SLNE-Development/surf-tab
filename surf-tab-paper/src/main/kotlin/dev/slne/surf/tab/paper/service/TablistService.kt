@@ -1,12 +1,20 @@
 package dev.slne.surf.tab.paper.service
 
+import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.tab.paper.hook.LuckPermsHook
+import dev.slne.surf.tab.paper.hook.SurfPlaytimeHook
+import dev.slne.surf.tab.paper.hook.SurfVanishHook
+import dev.slne.surf.tab.paper.isPlaytimeHook
+import dev.slne.surf.tab.paper.isVanishHook
 import dev.slne.surf.tab.paper.plugin
 import dev.slne.surf.tab.paper.tablistConfig
 import dev.slne.surf.tab.paper.util.formatWithAdventure
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 val tablistService = VelocityTablistService()
@@ -33,11 +41,46 @@ class VelocityTablistService {
         )
     }
 
+    fun isAfk(playerUuid: UUID) = if (isPlaytimeHook) SurfPlaytimeHook.isAfk(playerUuid) else false
+    fun isVanished(playerUuid: UUID) =
+        if (isVanishHook) SurfVanishHook.isVanished(playerUuid) else false
+
     fun formatPlayer(player: Player) {
         player.playerListName(formatDisplayName(player))
         player.playerListOrder = LuckPermsHook.getWeight(player.uniqueId)
     }
 
-    private fun formatDisplayName(player: Player) =
-        tablistConfig.playerName.formatWithAdventure(player)
+    private fun formatDisplayName(player: Player) = buildText {
+        append(getVanishTag(player.uniqueId))
+        append(
+            MiniMessage.miniMessage().deserialize(
+                LuckPermsHook.getPrefix(player.uniqueId) + player.name + LuckPermsHook.getSuffix(
+                    player.uniqueId
+                )
+            )
+        )
+        append(getAfkTag(player.uniqueId))
+    }
+
+    private fun getAfkTag(playerUuid: UUID) = if (isAfk(playerUuid)) {
+        buildText {
+            appendSpace()
+            darkSpacer("[")
+            spacer("AFK")
+            darkSpacer("]")
+        }
+    } else {
+        Component.empty()
+    }
+
+    private fun getVanishTag(playerUuid: UUID) = if (isVanished(playerUuid)) {
+        buildText {
+            darkSpacer("[")
+            note("V")
+            darkSpacer("]")
+            appendSpace()
+        }
+    } else {
+        Component.empty()
+    }
 }
