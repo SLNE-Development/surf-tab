@@ -1,5 +1,6 @@
 package dev.slne.surf.tab.paper.hook
 
+import com.github.shynixn.mccoroutine.folia.launch
 import dev.slne.surf.tab.paper.plugin
 import dev.slne.surf.tab.paper.service.tablistService
 import net.luckperms.api.LuckPermsProvider
@@ -47,8 +48,10 @@ object LuckPermsHook {
     }
 
     private fun updatePlayerInTablist(user: User) {
-        Bukkit.getPlayer(user.uniqueId)?.let {
-            tablistService.formatPlayer(it)
+        plugin.launch {
+            Bukkit.getPlayer(user.uniqueId)?.let {
+                tablistService.formatPlayer(it)
+            }
         }
     }
 

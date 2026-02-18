@@ -43,12 +43,12 @@ class VelocityTablistService {
     fun isVanished(playerUuid: UUID) =
         if (isVanishHook) SurfVanishHook.isVanished(playerUuid) else false
 
-    fun formatPlayer(player: Player) {
+    suspend fun formatPlayer(player: Player) {
         player.playerListName(formatDisplayName(player))
         player.playerListOrder = LuckPermsHook.getWeight(player.uniqueId)
     }
 
-    private fun formatDisplayName(player: Player) = buildText {
+    private suspend fun formatDisplayName(player: Player) = buildText {
         append(getVanishTag(player.uniqueId))
         append(
             MiniMessage.miniMessage().deserialize(
@@ -72,10 +72,14 @@ class VelocityTablistService {
         Component.empty()
     }
 
-    private fun getClanTag(playerUuid: UUID) = if (isClansHook) {
+    private suspend fun getClanTag(playerUuid: UUID) = if (isClansHook) {
         buildText {
-            appendSpace()
-            append(ClanHook.getClanTag(playerUuid))
+            val tag = ClanHook.getClanTag(playerUuid)
+
+            if (tag != null) {
+                appendSpace()
+                append(tag)
+            }
         }
     } else {
         Component.empty()
