@@ -1,13 +1,11 @@
 package dev.slne.surf.tab.paper.service
 
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
+import dev.slne.surf.tab.paper.*
+import dev.slne.surf.tab.paper.hook.ClanHook
 import dev.slne.surf.tab.paper.hook.LuckPermsHook
 import dev.slne.surf.tab.paper.hook.SurfPlaytimeHook
 import dev.slne.surf.tab.paper.hook.SurfVanishHook
-import dev.slne.surf.tab.paper.isPlaytimeHook
-import dev.slne.surf.tab.paper.isVanishHook
-import dev.slne.surf.tab.paper.plugin
-import dev.slne.surf.tab.paper.tablistConfig
 import dev.slne.surf.tab.paper.util.formatWithAdventure
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import net.kyori.adventure.text.Component
@@ -59,6 +57,7 @@ class VelocityTablistService {
                 )
             )
         )
+        append(getClanTag(player.uniqueId))
         append(getAfkTag(player.uniqueId))
     }
 
@@ -68,6 +67,15 @@ class VelocityTablistService {
             darkSpacer("[")
             spacer("AFK")
             darkSpacer("]")
+        }
+    } else {
+        Component.empty()
+    }
+
+    private fun getClanTag(playerUuid: UUID) = if (isClansHook) {
+        buildText {
+            appendSpace()
+            append(ClanHook.getClanTag(playerUuid))
         }
     } else {
         Component.empty()
