@@ -41,7 +41,7 @@ class PaperMain : SuspendingJavaPlugin() {
 
 val isVanishHook get() = pluginManager.isPluginEnabled("surf-vanish-paper")
 val isPlaytimeHook get() = pluginManager.isPluginEnabled("surf-playtime-paper")
-val isClansHook get() = pluginManager.isPluginEnabled("surf-clans-paper")
+val isClansHook get() = pluginManager.isPluginEnabled("surf-clan-paper")
 
 val tablistConfiguration = TablistConfigProvider()
 val tablistConfig get() = tablistConfiguration.config
