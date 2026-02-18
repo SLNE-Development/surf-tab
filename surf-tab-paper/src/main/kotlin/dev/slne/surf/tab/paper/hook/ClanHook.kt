@@ -1,0 +1,65 @@
+package dev.slne.surf.tab.paper.hook
+
+import com.github.shynixn.mccoroutine.folia.launch
+import dev.slne.clan.api.clan.Clan
+import dev.slne.clan.api.clan.ClanView
+import dev.slne.clan.api.clan.listener.ClanCreatedListener
+import dev.slne.clan.api.clan.listener.ClanDeletedListener
+import dev.slne.clan.api.clan.listener.ClanUpdateMemberListener
+import dev.slne.clan.api.clan.listener.ClanUpdatedListener
+import dev.slne.surf.tab.paper.plugin
+import dev.slne.surf.tab.paper.service.tablistService
+import net.kyori.adventure.text.Component
+import org.bukkit.Bukkit
+import java.util.*
+
+object ClanHook {
+    suspend fun getClanTag(playerUuid: UUID): Component? =
+        Clan.byPlayer(playerUuid)?.renderClanTag(10)
+
+    fun createListeners() {
+        Clan.registerListener(object : ClanCreatedListener {
+            override fun onClanCreated(clan: Clan) {
+                plugin.launch {
+                    clan.members.map { member -> member.uuid }.mapNotNull { Bukkit.getPlayer(it) }
+                        .forEach { member ->
+                            tablistService.formatPlayer(member)
+                        }
+                }
+            }
+        })
+
+        Clan.registerListener(object : ClanUpdatedListener {
+            override fun onClanUpdated(clan: Clan) {
+                plugin.launch {
+                    clan.members.map { member -> member.uuid }.mapNotNull { Bukkit.getPlayer(it) }
+                        .forEach { member ->
+                            tablistService.formatPlayer(member)
+                        }
+                }
+            }
+        })
+
+        Clan.registerListener(object : ClanUpdateMemberListener {
+            override fun onClanMemberUpdated(clan: Clan, memberUuid: UUID, added: Boolean) {
+                plugin.launch {
+                    clan.members.map { member -> member.uuid }.mapNotNull { Bukkit.getPlayer(it) }
+                        .forEach { member ->
+                            tablistService.formatPlayer(member)
+                        }
+                }
+            }
+        })
+
+        Clan.registerListener(object : ClanDeletedListener {
+            override fun onClanDeleted(clan: ClanView) {
+                plugin.launch {
+                    clan.members.map { member -> member.uuid }.mapNotNull { Bukkit.getPlayer(it) }
+                        .forEach { member ->
+                            tablistService.formatPlayer(member)
+                        }
+                }
+            }
+        })
+    }
+}

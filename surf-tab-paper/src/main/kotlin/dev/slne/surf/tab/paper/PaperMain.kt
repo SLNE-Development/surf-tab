@@ -5,6 +5,7 @@ import dev.slne.surf.surfapi.bukkit.api.event.register
 import dev.slne.surf.surfapi.bukkit.api.extensions.pluginManager
 import dev.slne.surf.tab.paper.command.surfTabCommand
 import dev.slne.surf.tab.paper.config.TablistConfigProvider
+import dev.slne.surf.tab.paper.hook.ClanHook
 import dev.slne.surf.tab.paper.hook.LuckPermsHook
 import dev.slne.surf.tab.paper.listener.ConnectionListener
 import dev.slne.surf.tab.paper.listener.PlaytimeListener
@@ -26,6 +27,10 @@ class PaperMain : SuspendingJavaPlugin() {
         if (isPlaytimeHook) {
             PlaytimeListener.register()
         }
+
+        if (isClansHook) {
+            ClanHook.createListeners()
+        }
     }
 
     override fun onDisable() {
@@ -36,6 +41,7 @@ class PaperMain : SuspendingJavaPlugin() {
 
 val isVanishHook get() = pluginManager.isPluginEnabled("surf-vanish-paper")
 val isPlaytimeHook get() = pluginManager.isPluginEnabled("surf-playtime-paper")
+val isClansHook get() = pluginManager.isPluginEnabled("surf-clan-paper")
 
 val tablistConfiguration = TablistConfigProvider()
 val tablistConfig get() = tablistConfiguration.config
