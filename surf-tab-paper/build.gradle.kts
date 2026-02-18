@@ -20,6 +20,7 @@ surfPaperPluginApi {
         registerRequired("MiniPlaceholders")
         registerSoft("surf-vanish-paper")
         registerSoft("surf-playtime-paper")
+        registerSoft("surf-clan-paper")
     }
 }
 
