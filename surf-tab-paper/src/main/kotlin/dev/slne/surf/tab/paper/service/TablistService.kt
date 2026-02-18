@@ -73,13 +73,14 @@ class VelocityTablistService {
     }
 
     private suspend fun getClanTag(playerUuid: UUID) = if (isClansHook) {
-        buildText {
-            val tag = ClanHook.getClanTag(playerUuid)
-
-            if (tag != null) {
+        val tag = ClanHook.getClanTag(playerUuid)
+        if (tag != null) {
+            buildText {
                 appendSpace()
                 append(tag)
             }
+        } else {
+            Component.empty()
         }
     } else {
         Component.empty()
