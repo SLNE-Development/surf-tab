@@ -20,6 +20,7 @@ surfPaperPluginApi {
         registerRequired("MiniPlaceholders")
         registerSoft("surf-vanish-paper")
         registerSoft("surf-playtime-paper")
+        registerSoft("surf-clan-paper")
     }
 }
 
@@ -31,4 +32,5 @@ dependencies {
     implementation("dev.slne.surf.vanish:surf-vanish-api-redis:1.21.11-1.0.9-SNAPSHOT")
     compileOnly("dev.slne.surf.vanish:surf-vanish-api:1.21.11-1.0.9-SNAPSHOT")
     compileOnly("dev.slne.surf.playtime:surf-playtime-api-paper:1.21.11-1.2.0-SNAPSHOT")
+    compileOnly("dev.slne.surf.clan:surf-clan-api:1.21.11-1.3.0")
 }
