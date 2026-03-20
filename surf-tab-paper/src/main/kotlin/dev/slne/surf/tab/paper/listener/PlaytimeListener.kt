@@ -1,6 +1,6 @@
 package dev.slne.surf.tab.paper.listener
 
-import dev.slne.surf.playtime.api.event.AfkStateChangeEvent
+import dev.slne.surf.playtime.api.paper.event.AfkStateChangeEvent
 import dev.slne.surf.tab.paper.service.tablistService
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
