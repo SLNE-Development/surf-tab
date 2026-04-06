@@ -1,19 +1,19 @@
 package dev.slne.surf.tab.paper.config
 
-import dev.slne.surf.surfapi.core.api.config.manager.SpongeConfigManager
-import dev.slne.surf.surfapi.core.api.config.surfConfigApi
+import dev.slne.surf.api.core.config.SurfConfigApi
+import dev.slne.surf.api.core.config.manager.SpongeConfigManager
 import dev.slne.surf.tab.paper.plugin
 
 class TablistConfigProvider {
     private val configManager: SpongeConfigManager<TablistConfig>
 
     init {
-        surfConfigApi.createSpongeYmlConfig(
+        SurfConfigApi.createSpongeYmlConfig(
             TablistConfig::class.java,
             plugin.dataPath,
             "config.yml"
         )
-        configManager = surfConfigApi.getSpongeConfigManagerForConfig(TablistConfig::class.java)
+        configManager = SurfConfigApi.getSpongeConfigManagerForConfig(TablistConfig::class.java)
 
         this.reload()
     }

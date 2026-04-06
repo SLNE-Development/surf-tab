@@ -1,8 +1,8 @@
-import dev.slne.surf.surfapi.gradle.util.registerRequired
-import dev.slne.surf.surfapi.gradle.util.registerSoft
+import dev.slne.surf.api.gradle.util.registerRequired
+import dev.slne.surf.api.gradle.util.registerSoft
 
 plugins {
-    id("dev.slne.surf.surfapi.gradle.paper-plugin")
+    id("dev.slne.surf.api.gradle.paper-plugin")
 }
 
 surfPaperPluginApi {
@@ -18,7 +18,6 @@ surfPaperPluginApi {
     serverDependencies {
         registerRequired("LuckPerms")
         registerRequired("MiniPlaceholders")
-        registerSoft("surf-vanish-paper")
         registerSoft("surf-playtime-paper")
         registerSoft("surf-clan-paper")
     }
@@ -29,8 +28,6 @@ dependencies {
     compileOnly(libs.mini.placeholders.kotlin)
     compileOnly(libs.luckperms.api)
     api(project(":surf-tab-api"))
-    implementation("dev.slne.surf.vanish:surf-vanish-api-redis:1.21.11-1.0.9-SNAPSHOT")
-    compileOnly("dev.slne.surf.vanish:surf-vanish-api:1.21.11-1.0.9-SNAPSHOT")
-    compileOnly("dev.slne.surf.playtime:surf-playtime-api-paper:1.21.11-1.2.0-SNAPSHOT")
-    compileOnly("dev.slne.surf.clan:surf-clan-api:1.21.11-1.3.0")
+    compileOnly("dev.slne.surf.playtime:surf-playtime-api-paper:+")
+    compileOnly("dev.slne.surf.clan:surf-clan-api:+")
 }

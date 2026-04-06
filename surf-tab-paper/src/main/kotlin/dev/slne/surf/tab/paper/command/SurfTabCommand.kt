@@ -4,7 +4,7 @@ import com.github.shynixn.mccoroutine.folia.launch
 import dev.jorel.commandapi.kotlindsl.anyExecutor
 import dev.jorel.commandapi.kotlindsl.commandTree
 import dev.jorel.commandapi.kotlindsl.literalArgument
-import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import dev.slne.surf.api.core.messages.adventure.sendText
 import dev.slne.surf.tab.paper.plugin
 import dev.slne.surf.tab.paper.service.tablistService
 import dev.slne.surf.tab.paper.tablistConfiguration

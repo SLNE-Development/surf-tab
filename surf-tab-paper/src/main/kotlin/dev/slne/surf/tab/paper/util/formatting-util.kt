@@ -1,7 +1,7 @@
 package dev.slne.surf.tab.paper.util
 
+import dev.slne.surf.api.core.messages.adventure.buildText
 import dev.slne.surf.core.api.common.server.SurfServer
-import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import io.github.miniplaceholders.api.MiniPlaceholders
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver

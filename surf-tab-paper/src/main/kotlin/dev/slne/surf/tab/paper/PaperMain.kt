@@ -1,15 +1,16 @@
 package dev.slne.surf.tab.paper
 
 import com.github.shynixn.mccoroutine.folia.SuspendingJavaPlugin
-import dev.slne.surf.surfapi.bukkit.api.event.register
-import dev.slne.surf.surfapi.bukkit.api.extensions.pluginManager
+import dev.slne.surf.api.paper.event.register
+import dev.slne.surf.api.paper.extensions.pluginManager
 import dev.slne.surf.tab.paper.command.surfTabCommand
 import dev.slne.surf.tab.paper.config.TablistConfigProvider
 import dev.slne.surf.tab.paper.hook.ClanHook
 import dev.slne.surf.tab.paper.hook.LuckPermsHook
-import dev.slne.surf.tab.paper.listener.ConnectionListener
+import dev.slne.surf.tab.paper.listener.PlayerListener
 import dev.slne.surf.tab.paper.listener.PlaytimeListener
 import dev.slne.surf.tab.paper.service.tablistService
+import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 
 val plugin get() = JavaPlugin.getPlugin(PaperMain::class.java)
@@ -22,7 +23,7 @@ class PaperMain : SuspendingJavaPlugin() {
 
         tablistService.startTask()
         LuckPermsHook.load()
-        ConnectionListener.register()
+        PlayerListener.register()
 
         if (isPlaytimeHook) {
             PlaytimeListener.register()
@@ -45,3 +46,6 @@ val isClansHook get() = pluginManager.isPluginEnabled("surf-clan-paper")
 
 val tablistConfiguration = TablistConfigProvider()
 val tablistConfig get() = tablistConfiguration.config
+
+fun Player.isVanished(): Boolean =
+    this.getMetadata("vanished").any { it.asBoolean() }

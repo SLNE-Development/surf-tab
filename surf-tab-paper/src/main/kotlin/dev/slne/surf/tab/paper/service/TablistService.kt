@@ -1,11 +1,10 @@
 package dev.slne.surf.tab.paper.service
 
-import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
+import dev.slne.surf.api.core.messages.adventure.buildText
 import dev.slne.surf.tab.paper.*
 import dev.slne.surf.tab.paper.hook.ClanHook
 import dev.slne.surf.tab.paper.hook.LuckPermsHook
 import dev.slne.surf.tab.paper.hook.SurfPlaytimeHook
-import dev.slne.surf.tab.paper.hook.SurfVanishHook
 import dev.slne.surf.tab.paper.util.formatWithAdventure
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import net.kyori.adventure.text.Component
@@ -41,7 +40,7 @@ class VelocityTablistService {
 
     fun isAfk(playerUuid: UUID) = if (isPlaytimeHook) SurfPlaytimeHook.isAfk(playerUuid) else false
     fun isVanished(playerUuid: UUID) =
-        if (isVanishHook) SurfVanishHook.isVanished(playerUuid) else false
+        if (isVanishHook) Bukkit.getPlayer(playerUuid)?.isVanished() ?: false else false
 
     suspend fun formatPlayer(player: Player) {
         player.playerListName(formatDisplayName(player))
