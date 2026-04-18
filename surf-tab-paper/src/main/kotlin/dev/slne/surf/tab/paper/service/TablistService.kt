@@ -3,6 +3,7 @@ package dev.slne.surf.tab.paper.service
 import dev.slne.surf.api.core.messages.adventure.buildText
 import dev.slne.surf.tab.paper.*
 import dev.slne.surf.tab.paper.hook.ClanHook
+import dev.slne.surf.tab.paper.hook.ContentCreatorHook
 import dev.slne.surf.tab.paper.hook.LuckPermsHook
 import dev.slne.surf.tab.paper.hook.SurfPlaytimeHook
 import dev.slne.surf.tab.paper.util.formatWithAdventure
@@ -57,6 +58,7 @@ class VelocityTablistService {
             )
         )
         append(getClanTag(player.uniqueId))
+        append(getLiveTag(player.uniqueId))
         append(getAfkTag(player.uniqueId))
     }
 
@@ -70,6 +72,8 @@ class VelocityTablistService {
     } else {
         Component.empty()
     }
+
+    private fun getLiveTag(playerUuid: UUID) = if(isContentCreatorHook) ContentCreatorHook.renderLiveTag(playerUuid) else Component.empty()
 
     private suspend fun getClanTag(playerUuid: UUID) = if (isClansHook) {
         val tag = ClanHook.getClanTag(playerUuid)

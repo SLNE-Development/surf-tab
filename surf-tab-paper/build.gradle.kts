@@ -20,6 +20,7 @@ surfPaperPluginApi {
         registerRequired("MiniPlaceholders")
         registerSoft("surf-playtime-paper")
         registerSoft("surf-clan-paper")
+        registerSoft("surf-content-creator-paper")
     }
 }
 
@@ -30,4 +31,5 @@ dependencies {
     api(project(":surf-tab-api"))
     compileOnly("dev.slne.surf.playtime:surf-playtime-api-paper:+")
     compileOnly("dev.slne.surf.clan:surf-clan-api:+")
+    compileOnly("dev.slne.surf.content.creator:surf-content-creator-api:+")
 }
