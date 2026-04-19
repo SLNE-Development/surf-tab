@@ -73,7 +73,8 @@ class VelocityTablistService {
         Component.empty()
     }
 
-    private fun getLiveTag(playerUuid: UUID) = if(isContentCreatorHook) ContentCreatorHook.renderLiveTag(playerUuid) else Component.empty()
+    private fun getLiveTag(playerUuid: UUID) =
+        if (isContentCreatorHook) ContentCreatorHook.renderLiveTag(playerUuid) else Component.empty()
 
     private suspend fun getClanTag(playerUuid: UUID) = if (isClansHook) {
         val tag = ClanHook.getClanTag(playerUuid)
