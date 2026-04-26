@@ -9,7 +9,6 @@ import dev.slne.surf.tab.paper.hook.SurfPlaytimeHook
 import dev.slne.surf.tab.paper.util.formatWithAdventure
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.*
@@ -50,13 +49,7 @@ class VelocityTablistService {
 
     private suspend fun formatDisplayName(player: Player) = buildText {
         append(getVanishTag(player.uniqueId))
-        append(
-            MiniMessage.miniMessage().deserialize(
-                LuckPermsHook.getPrefix(player.uniqueId) + player.name + LuckPermsHook.getSuffix(
-                    player.uniqueId
-                )
-            )
-        )
+        append(player.displayName())
         append(getClanTag(player.uniqueId))
         append(getLiveTag(player.uniqueId))
         append(getAfkTag(player.uniqueId))
