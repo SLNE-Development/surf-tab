@@ -2,6 +2,7 @@ package dev.slne.surf.tab.paper.listener
 
 import dev.slne.surf.playtime.api.paper.event.AfkStateChangeEvent
 import com.github.shynixn.mccoroutine.folia.launch
+import dev.slne.surf.playtime.api.paper.event.AfkStateChangeEvent
 import dev.slne.surf.tab.paper.plugin
 import dev.slne.surf.tab.paper.service.tablistService
 import org.bukkit.Bukkit
