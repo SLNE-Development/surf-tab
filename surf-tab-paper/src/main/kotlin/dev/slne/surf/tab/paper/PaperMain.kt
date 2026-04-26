@@ -10,8 +10,8 @@ import dev.slne.surf.tab.paper.hook.ContentCreatorHook
 import dev.slne.surf.tab.paper.hook.LuckPermsHook
 import dev.slne.surf.tab.paper.listener.PlayerListener
 import dev.slne.surf.tab.paper.listener.PlaytimeListener
+import dev.slne.surf.tab.paper.listener.VanishListener
 import dev.slne.surf.tab.paper.service.tablistService
-import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 
 val plugin get() = JavaPlugin.getPlugin(PaperMain::class.java)
@@ -37,6 +37,9 @@ class PaperMain : SuspendingJavaPlugin() {
         if (isContentCreatorHook) {
             ContentCreatorHook.registerListener()
         }
+        if (isVanishHook) {
+            VanishListener.register()
+        }
     }
 
     override fun onDisable() {
@@ -52,6 +55,3 @@ val isContentCreatorHook get() = pluginManager.isPluginEnabled("surf-content-cre
 
 val tablistConfiguration = TablistConfigProvider()
 val tablistConfig get() = tablistConfiguration.config
-
-fun Player.isVanished(): Boolean =
-    this.getMetadata("vanished").any { it.asBoolean() }
