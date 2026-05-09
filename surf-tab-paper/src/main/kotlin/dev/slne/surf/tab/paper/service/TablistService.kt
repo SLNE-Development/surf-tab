@@ -41,10 +41,7 @@ class VelocityTablistService {
 
     suspend fun formatPlayer(player: Player) {
         player.playerListName(formatDisplayName(player))
-        player.playerListOrder =
-            if (isVanishHook && VanishHook.isVanished(player.uniqueId)) 0 else LuckPermsHook.getWeight(
-                player.uniqueId
-            )
+        player.playerListOrder = LuckPermsHook.getWeight(player.uniqueId)
     }
 
     private suspend fun formatDisplayName(player: Player) = buildText {
