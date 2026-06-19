@@ -3,6 +3,7 @@ package dev.slne.surf.tab.paper.util
 import dev.slne.surf.api.core.messages.adventure.buildText
 import dev.slne.surf.core.api.common.server.SurfServer
 import io.github.miniplaceholders.api.MiniPlaceholders
+import net.kyori.adventure.text.TextReplacementConfig
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import org.bukkit.Bukkit
@@ -22,33 +23,43 @@ private val globalResolver = TagResolver.resolver(
 
 fun String.formatWithAdventure(player: Player) =
     MiniMessage.miniMessage().deserialize(this, player, TagResolver.resolver(globalResolver))
-        .replaceText {
-            it.matchLiteral("<server>")
-            it.replacement(buildText {
-                variableValue(SurfServer.current().name)
-            })
-        }
-        .replaceText {
-            it.matchLiteral("<players_online>")
-            it.replacement(buildText {
-                info(Bukkit.getOnlinePlayers().size)
-            })
-        }
-        .replaceText {
-            it.matchLiteral("<players_max>")
-            it.replacement(buildText {
-                info(Bukkit.getMaxPlayers())
-            })
-        }
-        .replaceText {
-            it.matchLiteral("<date>")
-            it.replacement(buildText {
-                info(ZonedDateTime.now().format(dateFormatter))
-            })
-        }
-        .replaceText {
-            it.matchLiteral("<time>")
-            it.replacement(buildText {
-                info(ZonedDateTime.now().format(timeFormatter))
-            })
-        }
+        .replaceText(
+            TextReplacementConfig.builder()
+                .matchLiteral("<server>")
+                .replacement(buildText {
+                    variableValue(SurfServer.current().name)
+                })
+                .build()
+        )
+        .replaceText(
+            TextReplacementConfig.builder()
+                .matchLiteral("<players_online>")
+                .replacement(buildText {
+                    info(Bukkit.getOnlinePlayers().size)
+                })
+                .build()
+        )
+        .replaceText(
+            TextReplacementConfig.builder()
+                .matchLiteral("<players_max>")
+                .replacement(buildText {
+                    info(Bukkit.getMaxPlayers())
+                })
+                .build()
+        )
+        .replaceText(
+            TextReplacementConfig.builder()
+                .matchLiteral("<data>")
+                .replacement(buildText {
+                    info(ZonedDateTime.now().format(dateFormatter))
+                })
+                .build()
+        )
+        .replaceText(
+            TextReplacementConfig.builder()
+                .matchLiteral("<time>")
+                .replacement(buildText {
+                    info(ZonedDateTime.now().format(timeFormatter))
+                })
+                .build()
+        )
