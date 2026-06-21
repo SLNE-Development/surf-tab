@@ -49,7 +49,7 @@ fun String.formatWithAdventure(player: Player) =
         )
         .replaceText(
             TextReplacementConfig.builder()
-                .matchLiteral("<data>")
+                .matchLiteral("<date>")
                 .replacement(buildText {
                     info(ZonedDateTime.now().format(dateFormatter))
                 })
