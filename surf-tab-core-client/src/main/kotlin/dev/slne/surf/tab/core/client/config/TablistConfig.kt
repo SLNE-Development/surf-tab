@@ -1,4 +1,4 @@
-package dev.slne.surf.tab.paper.config
+package dev.slne.surf.tab.core.client.config
 
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 

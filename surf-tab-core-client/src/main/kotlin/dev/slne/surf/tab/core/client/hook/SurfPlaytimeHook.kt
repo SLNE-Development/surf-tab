@@ -1,4 +1,4 @@
-package dev.slne.surf.tab.paper.hook
+package dev.slne.surf.tab.core.client.hook
 
 import dev.slne.surf.playtime.api.common.surfPlaytimeApi
 import java.util.*

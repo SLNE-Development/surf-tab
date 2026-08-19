@@ -1,18 +1,29 @@
-package dev.slne.surf.tab.paper
+package dev.slne.surf.tab.core.client.redis
 
 import dev.slne.surf.redis.RedisApi
-import dev.slne.surf.tab.paper.redis.TabRedisEventListener
 
-val redisLoader = BukkitRedisLoader()
+val redisLoader = TabRedisLoader()
 val redisApi get() = redisLoader.redisApi
 
-class BukkitRedisLoader {
+class TabRedisLoader {
     lateinit var redisApi: RedisApi
 
-    fun connect() {
+    fun onLoad() {
         redisApi = RedisApi.create()
+    }
+
+    fun subscribeToEvents() {
         redisApi.subscribeToEvents(TabRedisEventListener)
+    }
+
+    fun onEnable() {
         redisApi.freezeAndConnect()
+    }
+
+    fun connect() {
+        onLoad()
+        subscribeToEvents()
+        onEnable()
     }
 
     fun disconnect() {
