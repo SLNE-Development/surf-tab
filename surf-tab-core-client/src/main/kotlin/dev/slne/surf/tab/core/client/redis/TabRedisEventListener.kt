@@ -1,17 +1,15 @@
-package dev.slne.surf.tab.paper.redis
+package dev.slne.surf.tab.core.client.redis
 
-import com.github.shynixn.mccoroutine.folia.launch
 import dev.slne.surf.redis.event.OnRedisEvent
 import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
-import dev.slne.surf.tab.paper.plugin
-import dev.slne.surf.tab.paper.service.tablistService
-import org.bukkit.Bukkit
+import dev.slne.surf.tab.core.client.platform.TabPlatform
+import dev.slne.surf.tab.core.client.service.tablistService
 
 object TabRedisEventListener {
     @OnRedisEvent
     fun onUpdate(event: TabEntryUpdateRedisEvent) {
-        Bukkit.getPlayer(event.toUpdateUuid)?.let {
-            plugin.launch {
+        TabPlatform.player(event.toUpdateUuid)?.let {
+            TabPlatform.launch {
                 tablistService.formatPlayer(it)
             }
         }

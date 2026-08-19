@@ -1,8 +1,9 @@
 package dev.slne.surf.tab.paper.listener
 
 import com.github.shynixn.mccoroutine.folia.launch
+import dev.slne.surf.tab.core.client.service.tablistService
+import dev.slne.surf.tab.paper.platform.PaperTabPlayer
 import dev.slne.surf.tab.paper.plugin
-import dev.slne.surf.tab.paper.service.tablistService
 import dev.slne.surf.vanish.api.event.PlayerNickEvent
 import dev.slne.surf.vanish.api.event.PlayerReappearEvent
 import dev.slne.surf.vanish.api.event.PlayerUnNickEvent
@@ -15,7 +16,7 @@ object VanishListener : Listener {
     fun onVanish(event: PlayerVanishEvent) {
         plugin.launch {
             event.player?.let {
-                tablistService.formatPlayer(it)
+                tablistService.formatPlayer(PaperTabPlayer(it))
             }
         }
     }
@@ -24,7 +25,7 @@ object VanishListener : Listener {
     fun onReappear(event: PlayerReappearEvent) {
         plugin.launch {
             event.player?.let {
-                tablistService.formatPlayer(it)
+                tablistService.formatPlayer(PaperTabPlayer(it))
             }
         }
     }
@@ -33,7 +34,7 @@ object VanishListener : Listener {
     fun onNick(event: PlayerNickEvent) {
         plugin.launch {
             event.player?.let {
-                tablistService.formatPlayer(it)
+                tablistService.formatPlayer(PaperTabPlayer(it))
             }
         }
     }
@@ -42,7 +43,7 @@ object VanishListener : Listener {
     fun onUnNick(event: PlayerUnNickEvent) {
         plugin.launch {
             event.player?.let {
-                tablistService.formatPlayer(it)
+                tablistService.formatPlayer(PaperTabPlayer(it))
             }
         }
     }

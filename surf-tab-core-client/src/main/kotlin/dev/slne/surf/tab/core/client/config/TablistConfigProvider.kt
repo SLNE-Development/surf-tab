@@ -1,8 +1,8 @@
-package dev.slne.surf.tab.paper.config
+package dev.slne.surf.tab.core.client.config
 
 import dev.slne.surf.api.core.config.manager.SpongeConfigManager
 import dev.slne.surf.api.core.config.surfConfigApi
-import dev.slne.surf.tab.paper.plugin
+import dev.slne.surf.tab.core.client.platform.TabPlatform
 
 class TablistConfigProvider {
     private val configManager: SpongeConfigManager<TablistConfig>
@@ -10,7 +10,7 @@ class TablistConfigProvider {
     init {
         surfConfigApi.createSpongeYmlConfig(
             TablistConfig::class.java,
-            plugin.dataPath,
+            TabPlatform.dataPath,
             "config.yml"
         )
         configManager = surfConfigApi.getSpongeConfigManagerForConfig(TablistConfig::class.java)

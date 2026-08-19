@@ -29,7 +29,7 @@ dependencies {
     compileOnly(libs.mini.placeholders)
     compileOnly(libs.mini.placeholders.kotlin)
     compileOnly(libs.luckperms.api)
-    api(project(":surf-tab-api"))
+    api(project(":surf-tab-core-client"))
     compileOnly("dev.slne.surf.vanish:surf-vanish-api:+")
     compileOnly("dev.slne.surf.playtime:surf-playtime-api-paper:+")
     compileOnly("dev.slne.surf.clan:surf-clan-api:+")

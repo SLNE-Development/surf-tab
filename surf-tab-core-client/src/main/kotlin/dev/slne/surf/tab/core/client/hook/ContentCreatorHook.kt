@@ -1,14 +1,12 @@
-package dev.slne.surf.tab.paper.hook
+package dev.slne.surf.tab.core.client.hook
 
-import com.github.shynixn.mccoroutine.folia.launch
 import dev.slne.surf.content.creator.api.ContentCreatorApi
 import dev.slne.surf.content.creator.api.ContentCreatorPlatform
 import dev.slne.surf.content.creator.api.listener.StateChangeListener
 import dev.slne.surf.content.creator.api.platform.PlatformState
-import dev.slne.surf.tab.paper.plugin
-import dev.slne.surf.tab.paper.service.tablistService
+import dev.slne.surf.tab.core.client.platform.TabPlatform
+import dev.slne.surf.tab.core.client.service.tablistService
 import net.kyori.adventure.text.Component
-import org.bukkit.Bukkit
 import java.util.*
 
 object ContentCreatorHook {
@@ -22,8 +20,8 @@ object ContentCreatorHook {
                 contentCreatorPlatform: ContentCreatorPlatform,
                 newState: PlatformState
             ) {
-                plugin.launch {
-                    Bukkit.getPlayer(playerUuid)?.let {
+                TabPlatform.launch {
+                    TabPlatform.player(playerUuid)?.let {
                         tablistService.formatPlayer(it)
                     }
                 }
