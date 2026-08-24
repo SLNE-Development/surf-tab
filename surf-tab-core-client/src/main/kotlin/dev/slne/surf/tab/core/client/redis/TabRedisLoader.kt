@@ -6,7 +6,9 @@ val redisLoader = TabRedisLoader()
 val redisApi get() = redisLoader.redisApi
 
 class TabRedisLoader {
+    @Volatile
     lateinit var redisApi: RedisApi
+        private set
 
     fun onLoad() {
         redisApi = RedisApi.create()

@@ -9,7 +9,8 @@ import kotlin.time.Duration.Companion.seconds
 val tablistTask = TablistTask()
 
 class TablistTask {
-    private lateinit var task: Job
+    @Volatile
+    private var task: Job? = null
 
     fun startTask() {
         task = minestomAsyncScope.runAtFixedRate(1.seconds, taskName = "tab-header-footer") {
@@ -18,8 +19,7 @@ class TablistTask {
     }
 
     fun cancelTask() {
-        if (::task.isInitialized) {
-            task.cancel()
-        }
+        task?.cancel()
+        task = null
     }
 }

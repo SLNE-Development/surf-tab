@@ -29,7 +29,7 @@ object LuckPermsHook {
     fun updatePlayerInTablist(user: User) {
         TabPlatform.launch {
             TabPlatform.player(user.uniqueId)?.let {
-                tablistService.formatPlayer(it)
+                tablistService.requestFormat(it)
             }
         }
     }

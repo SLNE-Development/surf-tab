@@ -1,25 +1,26 @@
 package dev.slne.surf.tab.paper.service
 
+import com.github.shynixn.mccoroutine.folia.scope
+import dev.slne.surf.api.core.util.runAtFixedRate
 import dev.slne.surf.tab.core.client.service.tablistService
 import dev.slne.surf.tab.paper.plugin
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask
-import org.bukkit.Bukkit
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Job
+import kotlin.time.Duration.Companion.seconds
 
 val tablistTask = TablistTask()
 
 class TablistTask {
-    lateinit var task: ScheduledTask
+    @Volatile
+    private var task: Job? = null
 
     fun startTask() {
-        task = Bukkit.getAsyncScheduler().runAtFixedRate(plugin, {
+        task = plugin.scope.runAtFixedRate(1.seconds, taskName = "tab-header-footer") {
             tablistService.sendAdditionsToAll()
-        }, 0L, 1L, TimeUnit.SECONDS)
+        }
     }
 
     fun cancelTask() {
-        if (::task.isInitialized) {
-            task.cancel()
-        }
+        task?.cancel()
+        task = null
     }
 }

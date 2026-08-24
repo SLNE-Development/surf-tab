@@ -9,9 +9,7 @@ object TabRedisEventListener {
     @OnRedisEvent
     fun onUpdate(event: TabEntryUpdateRedisEvent) {
         TabPlatform.player(event.toUpdateUuid)?.let {
-            TabPlatform.launch {
-                tablistService.formatPlayer(it)
-            }
+            tablistService.requestFormat(it)
         }
     }
 }

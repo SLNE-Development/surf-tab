@@ -9,6 +9,7 @@ import dev.slne.surf.tab.core.client.platform.TabPlayer
 import io.github.miniplaceholders.api.MiniPlaceholders
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.Tag.selfClosingInserting
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver.resolver
 import java.time.ZonedDateTime
 
@@ -24,12 +25,14 @@ private val globalResolver = resolver(
     ),
 )
 
-fun String.formatWithAdventure(player: TabPlayer): Component {
-    val resolver = resolver(
+fun tablistPlaceholders(onlinePlayerCount: Int): TagResolver {
+    val now = ZonedDateTime.now()
+
+    return resolver(
         globalResolver,
         resolver(
             "players_online",
-            selfClosingInserting(text(TabPlatform.onlinePlayers().size, Colors.INFO))
+            selfClosingInserting(text(onlinePlayerCount, Colors.INFO))
         ),
         resolver(
             "players_max",
@@ -37,14 +40,14 @@ fun String.formatWithAdventure(player: TabPlayer): Component {
         ),
         resolver(
             "date",
-            selfClosingInserting(text(formatTablistDate(ZonedDateTime.now()), Colors.INFO))
+            selfClosingInserting(text(formatTablistDate(now), Colors.INFO))
         ),
         resolver(
             "time",
-            selfClosingInserting(text(formatTablistTime(ZonedDateTime.now()), Colors.INFO))
+            selfClosingInserting(text(formatTablistTime(now), Colors.INFO))
         ),
     )
-
-    return miniMessage.deserialize(this, player.audience, resolver)
-
 }
+
+fun String.formatWithAdventure(player: TabPlayer, placeholders: TagResolver): Component =
+    miniMessage.deserialize(this, player.audience, placeholders)
