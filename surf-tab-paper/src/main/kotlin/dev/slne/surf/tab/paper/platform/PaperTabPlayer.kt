@@ -13,6 +13,9 @@ class PaperTabPlayer(private val player: Player) : TabPlayer {
 
     override fun baseName(): Component = player.displayName()
 
+    override suspend fun baseNameSnapshot(): Component =
+        withContext(plugin.entityDispatcher(player)) { baseName() }
+
     override suspend fun showTabEntry(name: Component, order: Int) {
         withContext(plugin.entityDispatcher(player)) {
             player.playerListName(name)

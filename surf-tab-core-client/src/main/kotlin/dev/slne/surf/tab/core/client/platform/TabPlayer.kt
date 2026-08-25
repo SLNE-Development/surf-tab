@@ -22,6 +22,11 @@ interface TabPlayer {
     fun baseName(): Component
 
     /**
+     * Reads [baseName] on the owning entity context when the platform requires it.
+     */
+    suspend fun baseNameSnapshot(): Component
+
+    /**
      * Shows [name] as this player's tablist entry, sorted by [order] where a higher order comes
      * first.
      */
