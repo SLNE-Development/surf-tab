@@ -22,12 +22,8 @@ interface TabPlayer {
     fun baseName(): Component
 
     /**
-     * Shows [name] as this player's tablist entry.
+     * Shows [name] as this player's tablist entry, sorted by [order] where a higher order comes
+     * first.
      */
-    suspend fun showTabName(name: Component)
-
-    /**
-     * Sorts this player's tablist entry by [order], where a higher order comes first.
-     */
-    suspend fun showTabOrder(order: Int)
+    suspend fun showTabEntry(name: Component, order: Int)
 }

@@ -39,6 +39,11 @@ interface TabPlatform {
     fun onlinePlayers(): Collection<TabPlayer>
 
     /**
+     * The number of players currently on this server.
+     */
+    fun onlinePlayerCount(): Int
+
+    /**
      * Returns the player with the given [playerUuid], or `null` if they are not on this server.
      */
     fun player(playerUuid: UUID): TabPlayer?

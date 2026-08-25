@@ -16,3 +16,8 @@ dependencies {
     compileOnly("dev.slne.surf.clan:surf-clan-api:+")
     compileOnly("dev.slne.surf.content.creator:surf-content-creator-api:+")
 }
+
+sourceSets.test {
+    compileClasspath += sourceSets.main.get().compileClasspath
+    runtimeClasspath += sourceSets.main.get().compileClasspath
+}

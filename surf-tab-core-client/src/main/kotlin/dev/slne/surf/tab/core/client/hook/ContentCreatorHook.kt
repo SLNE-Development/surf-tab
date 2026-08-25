@@ -22,7 +22,7 @@ object ContentCreatorHook {
             ) {
                 TabPlatform.launch {
                     TabPlatform.player(playerUuid)?.let {
-                        tablistService.formatPlayer(it)
+                        tablistService.requestFormat(it)
                     }
                 }
             }

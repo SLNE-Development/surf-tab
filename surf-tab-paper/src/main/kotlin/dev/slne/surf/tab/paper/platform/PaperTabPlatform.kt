@@ -23,6 +23,8 @@ class PaperTabPlatform : TabPlatform {
 
     override fun onlinePlayers() = Bukkit.getOnlinePlayers().map { PaperTabPlayer(it) }
 
+    override fun onlinePlayerCount() = Bukkit.getOnlinePlayers().size
+
     override fun player(playerUuid: UUID) = Bukkit.getPlayer(playerUuid)?.let { PaperTabPlayer(it) }
 
     override fun maxPlayerCount() = Bukkit.getMaxPlayers()

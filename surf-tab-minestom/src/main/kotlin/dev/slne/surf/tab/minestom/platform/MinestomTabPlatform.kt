@@ -20,6 +20,8 @@ class MinestomTabPlatform : TabPlatform {
 
     override fun onlinePlayers() = ConnectionManager.onlinePlayers.map { MinestomTabPlayer(it) }
 
+    override fun onlinePlayerCount() = ConnectionManager.onlinePlayers.size
+
     override fun player(playerUuid: UUID) =
         ConnectionManager.getOnlinePlayerByUuid(playerUuid)?.let { MinestomTabPlayer(it) }
 
