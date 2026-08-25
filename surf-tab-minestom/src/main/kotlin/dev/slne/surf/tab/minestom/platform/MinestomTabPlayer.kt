@@ -16,6 +16,8 @@ class MinestomTabPlayer(private val player: Player) : TabPlayer {
     override fun baseName(): Component =
         miniMessage.deserialize("${LuckPermsAccess.getUser(player.uuid)?.prefix ?: ""}${player.username}")
 
+    override suspend fun baseNameSnapshot(): Component = player.withEntity { baseName() }
+
     override suspend fun showTabEntry(name: Component, order: Int) {
         player.withEntity {
             it.displayName = name

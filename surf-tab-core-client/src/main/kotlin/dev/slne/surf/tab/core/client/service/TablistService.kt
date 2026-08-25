@@ -2,6 +2,7 @@ package dev.slne.surf.tab.core.client.service
 
 import dev.slne.surf.api.core.messages.adventure.buildText
 import dev.slne.surf.api.core.minimessage.miniMessage
+import dev.slne.surf.api.core.util.logger
 import dev.slne.surf.core.api.common.server.SurfServer
 import dev.slne.surf.tab.core.client.config.tablistConfig
 import dev.slne.surf.tab.core.client.hook.ClanHook
@@ -17,8 +18,14 @@ import net.kyori.adventure.text.Component
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration.Companion.seconds
 
 val tablistService = TablistService()
+
+private val log = logger()
+
+private val tabEntryUpdateTimeout = 5.seconds
+private val clanLookupTimeout = 2.seconds
 
 private val afkTag = buildText {
     appendSpace()
@@ -36,9 +43,29 @@ private val vanishTag = buildText {
 
 class TablistService {
 
-    private val updates = UpdateCoalescer<TabPlayer>(
+    private val entryUpdater = TabEntryUpdater<TabPlayer>(
+        baseName = { player -> player.baseNameSnapshot() },
+        order = { player -> LuckPermsHook.getWeight(player.uuid) },
+        vanishTag = { player -> getVanishTag(player.uuid) },
+        clanTag = { player -> getClanTag(player.uuid) },
+        liveTag = { player -> getLiveTag(player.uuid) },
+        afkTag = { player -> getAfkTag(player.uuid) },
+        show = { player, name, order -> player.showTabEntry(name, order) },
+        clanTimeout = clanLookupTimeout,
+        onPartFailure = { part, player, failure ->
+            log.atWarning()
+                .withCause(failure)
+                .log("Failed to resolve tablist part %s for player %s", part, player.uuid)
+        }
+    )
+
+    private val updates = UpdateCoalescer(
         runUpdates = { block -> TabPlatform.launch { block() } },
-        update = { player -> formatPlayer(player) }
+        updateTimeout = tabEntryUpdateTimeout,
+        onTimeout = { playerUuid, _ ->
+            log.atWarning().log("Tablist update for player %s timed out", playerUuid)
+        },
+        update = entryUpdater::update
     )
 
     /**
@@ -134,18 +161,6 @@ class TablistService {
         )
     }
 
-    private suspend fun formatPlayer(player: TabPlayer) {
-        player.showTabEntry(formatDisplayName(player), LuckPermsHook.getWeight(player.uuid))
-    }
-
-    private suspend fun formatDisplayName(player: TabPlayer) = buildText {
-        append(getVanishTag(player.uuid))
-        append(player.baseName())
-        append(getClanTag(player.uuid))
-        append(getLiveTag(player.uuid))
-        append(getAfkTag(player.uuid))
-    }
-
     private fun getAfkTag(playerUuid: UUID) = if (isAfk(playerUuid)) {
         afkTag
     } else {
@@ -159,18 +174,15 @@ class TablistService {
             Component.empty()
         }
 
-    private suspend fun getClanTag(playerUuid: UUID) = if (TabPlatform.clanAvailable) {
-        val tag = ClanHook.getClanTag(playerUuid)
-        if (tag != null) {
-            buildText {
-                appendSpace()
-                append(tag)
-            }
-        } else {
-            Component.empty()
+    private suspend fun getClanTag(playerUuid: UUID): Component? {
+        if (!TabPlatform.clanAvailable) return null
+
+        val tag = ClanHook.getClanTag(playerUuid) ?: return null
+
+        return buildText {
+            appendSpace()
+            append(tag)
         }
-    } else {
-        Component.empty()
     }
 
     private fun getVanishTag(playerUuid: UUID) = if (isVanished(playerUuid)) {

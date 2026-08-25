@@ -1,8 +1,10 @@
 package dev.slne.surf.tab.core.client.service
 
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Coalesces update requests so that at most one update is running for a key at any time.
@@ -32,10 +34,14 @@ import kotlin.coroutines.cancellation.CancellationException
  * scheduling behavior of [runUpdates].
  *
  * @param runUpdates schedules an update loop on the scope or dispatcher on which updates must run
+ * @param updateTimeout the maximum time one update pass may occupy its key
+ * @param onTimeout observes a pass that exceeded [updateTimeout]
  * @param update performs a single update for the supplied target
  */
 internal class UpdateCoalescer<T>(
     private val runUpdates: (suspend () -> Unit) -> Unit,
+    private val updateTimeout: Duration = 5.seconds,
+    private val onTimeout: (UUID, T) -> Unit = { _, _ -> },
     private val update: suspend (T) -> Unit
 ) {
 
@@ -125,9 +131,18 @@ internal class UpdateCoalescer<T>(
 
         while (true) {
             try {
-                update(current.target)
+                val completed = withTimeoutOrNull(updateTimeout) {
+                    update(current.target)
+                    true
+                }
+
+                if (completed == null) {
+                    runCatching {
+                        onTimeout(key, current.target)
+                    }
+                }
             } catch (throwable: Throwable) {
-                giveUp(key, current, throwable)
+                giveUp(key, current)
                 throw throwable
             }
 
@@ -147,21 +162,20 @@ internal class UpdateCoalescer<T>(
      * If a newer request arrived while the failed pass was running, that request belongs to neither
      * the failed operation nor its target and is therefore submitted again as a fresh update loop.
      *
-     * Cancellation is treated differently: when the coroutine is being cancelled, no replacement
-     * loop is started because doing so would effectively escape the cancellation of the current
-     * update scope.
-     *
      * @param key the key whose update failed
      * @param current the request whose update threw
-     * @param failure the exception thrown by the update
      */
-    private fun giveUp(key: UUID, current: Requested<T>, failure: Throwable) {
-        val requested = inFlight.remove(key)
+    private fun giveUp(key: UUID, current: Requested<T>) {
+        while (true) {
+            val requested = inFlight[key] ?: return
 
-        if (requested == null || requested === current) return
-        if (failure is CancellationException) return
+            if (requested === current) {
+                if (inFlight.remove(key, current)) return
+                continue
+            }
 
-        request(key, requested.target)
+            return handOver(key, requested)
+        }
     }
 }
 

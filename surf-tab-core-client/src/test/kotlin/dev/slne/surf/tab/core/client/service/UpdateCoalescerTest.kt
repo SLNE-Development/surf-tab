@@ -1,12 +1,18 @@
 package dev.slne.surf.tab.core.client.service
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -15,6 +21,8 @@ import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class UpdateCoalescerTest {
 
@@ -141,6 +149,136 @@ class UpdateCoalescerTest {
         assertThrows(IllegalStateException::class.java) { coalescer.request(key, "original") }
 
         assertEquals(listOf("original", "reconnected"), updated)
+    }
+
+    @Test
+    fun `a newer request is still applied when the running update is cancelled`() = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val firstStarted = CompletableDeferred<Unit>()
+        val newestApplied = CompletableDeferred<String>()
+        lateinit var firstJob: Job
+        var launches = 0
+
+        try {
+            val coalescer = UpdateCoalescer<String>(
+                runUpdates = { block ->
+                    scope.launch { block() }.also { job ->
+                        if (launches++ == 0) firstJob = job
+                    }
+                },
+                update = { target ->
+                    if (target == "cancelled") {
+                        firstStarted.complete(Unit)
+                        awaitCancellation()
+                    } else {
+                        delay(1.milliseconds)
+                        newestApplied.complete(target)
+                    }
+                }
+            )
+
+            coalescer.request(key, "cancelled")
+            firstStarted.await()
+            coalescer.request(key, "newest")
+            firstJob.cancelAndJoin()
+
+            assertEquals("newest", withTimeout(1.seconds) { newestApplied.await() })
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    @Test
+    fun `an external timeout cancellation is not mistaken for the update timeout`() = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val firstStarted = CompletableDeferred<Unit>()
+        val newestApplied = CompletableDeferred<String>()
+        lateinit var firstJob: Job
+        var launches = 0
+        val externalTimeout = runCatching {
+            withTimeout(1.milliseconds) { awaitCancellation() }
+        }.exceptionOrNull() as TimeoutCancellationException
+
+        try {
+            val coalescer = UpdateCoalescer<String>(
+                runUpdates = { block ->
+                    scope.launch { block() }.also { job ->
+                        if (launches++ == 0) firstJob = job
+                    }
+                },
+                update = { target ->
+                    if (target == "cancelled") {
+                        firstStarted.complete(Unit)
+                        awaitCancellation()
+                    } else {
+                        delay(1.milliseconds)
+                        newestApplied.complete(target)
+                    }
+                }
+            )
+
+            coalescer.request(key, "cancelled")
+            firstStarted.await()
+            coalescer.request(key, "newest")
+            firstJob.cancel(externalTimeout)
+            firstJob.join()
+
+            assertEquals("newest", withTimeout(1.seconds) { newestApplied.await() })
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    @Test
+    fun `a timed out update does not wedge the key and the newest request wins`() = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val firstStarted = CompletableDeferred<Unit>()
+        val newestApplied = CompletableDeferred<String>()
+        val timedOut = CompletableDeferred<String>()
+
+        try {
+            val coalescer = UpdateCoalescer<String>(
+                runUpdates = { block -> scope.launch { block() } },
+                update = { target ->
+                    if (target == "stuck") {
+                        firstStarted.complete(Unit)
+                        awaitCancellation()
+                    } else {
+                        newestApplied.complete(target)
+                    }
+                },
+                updateTimeout = 50.milliseconds,
+                onTimeout = { _, target -> timedOut.complete(target) }
+            )
+
+            coalescer.request(key, "stuck")
+            firstStarted.await()
+            coalescer.request(key, "newest")
+
+            assertEquals("stuck", withTimeout(1.seconds) { timedOut.await() })
+            assertEquals("newest", withTimeout(1.seconds) { newestApplied.await() })
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    @Test
+    fun `a failing timeout observer does not wedge the key`() {
+        var updates = 0
+        val coalescer = UpdateCoalescer<String>(
+            runUpdates = ::runHere,
+            updateTimeout = 10.milliseconds,
+            onTimeout = { _, _ -> error("observer failed") },
+            update = {
+                updates++
+                if (updates == 1) awaitCancellation()
+            }
+        )
+
+        coalescer.request(key, "first")
+        coalescer.request(key, "second")
+
+        assertEquals(2, updates)
     }
 
     @Test
