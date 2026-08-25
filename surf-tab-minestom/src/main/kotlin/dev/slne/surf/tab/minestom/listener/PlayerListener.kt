@@ -3,15 +3,14 @@ package dev.slne.surf.tab.minestom.listener
 import com.google.inject.Inject
 import dev.slne.minestom.lobby.api.event.EventRegistrar
 import dev.slne.minestom.lobby.api.extension.addListener
+import dev.slne.surf.tab.core.client.service.TablistUpdateReason
 import dev.slne.surf.tab.core.client.service.tablistService
 import dev.slne.surf.tab.minestom.platform.MinestomTabPlayer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 
-/**
- * Fills the tablist of a player as soon as they arrive.
- */
 class PlayerListener @Inject constructor() : EventRegistrar {
     override fun register(node: EventNode<Event>) {
         node.addListener<PlayerSpawnEvent> { event ->
@@ -19,8 +18,14 @@ class PlayerListener @Inject constructor() : EventRegistrar {
 
             val player = MinestomTabPlayer(event.player)
 
-            tablistService.sendAdditions(player)
+            tablistService.invalidatePlayer(player)
             tablistService.requestFormat(player)
+            tablistService.invalidateAll(TablistUpdateReason.PLAYER_COUNT)
+        }
+
+        node.addListener<PlayerDisconnectEvent> { event ->
+            tablistService.forget(event.player.uuid)
+            tablistService.invalidateAll(TablistUpdateReason.PLAYER_COUNT)
         }
     }
 }

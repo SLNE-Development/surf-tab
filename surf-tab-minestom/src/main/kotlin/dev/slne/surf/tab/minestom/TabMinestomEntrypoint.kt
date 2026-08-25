@@ -8,8 +8,8 @@ import dev.slne.surf.tab.core.client.config.tablistConfiguration
 import dev.slne.surf.tab.core.client.hook.ClanHook
 import dev.slne.surf.tab.core.client.hook.ContentCreatorHook
 import dev.slne.surf.tab.core.client.redis.redisLoader
+import dev.slne.surf.tab.core.client.service.TablistScheduler
 import dev.slne.surf.tab.minestom.hook.registerLuckPermsListeners
-import dev.slne.surf.tab.minestom.service.tablistTask
 import java.nio.file.Path
 
 @Singleton
@@ -32,11 +32,11 @@ class TabMinestomEntrypoint @Inject constructor(
         ClanHook.createListeners()
         ContentCreatorHook.registerListener()
 
-        tablistTask.startTask()
+        TablistScheduler.startTask()
     }
 
     override suspend fun stop() {
-        tablistTask.cancelTask()
+        TablistScheduler.cancelTask()
         redisLoader.disconnect()
     }
 

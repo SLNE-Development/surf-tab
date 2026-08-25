@@ -1,11 +1,13 @@
 package dev.slne.surf.tab.paper.listener
 
+import dev.slne.surf.tab.core.client.service.TablistUpdateReason
 import dev.slne.surf.tab.core.client.service.tablistService
 import dev.slne.surf.tab.paper.platform.PaperTabPlayer
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.event.player.PlayerShowEntityEvent
 
 object PlayerListener : Listener {
@@ -13,8 +15,15 @@ object PlayerListener : Listener {
     fun onJoin(event: PlayerJoinEvent) {
         val player = PaperTabPlayer(event.player)
 
-        tablistService.sendAdditions(player)
+        tablistService.invalidatePlayer(player)
         tablistService.requestFormat(player)
+        tablistService.invalidateAll(TablistUpdateReason.PLAYER_COUNT)
+    }
+
+    @EventHandler
+    fun onQuit(event: PlayerQuitEvent) {
+        tablistService.forget(event.player.uniqueId)
+        tablistService.invalidateAll(TablistUpdateReason.PLAYER_COUNT)
     }
 
     @EventHandler

@@ -1,6 +1,8 @@
 package dev.slne.surf.tab.core.client.service
 
 import dev.slne.surf.api.core.messages.adventure.buildText
+import dev.slne.surf.api.core.minimessage.miniMessage
+import dev.slne.surf.core.api.common.server.SurfServer
 import dev.slne.surf.tab.core.client.config.tablistConfig
 import dev.slne.surf.tab.core.client.hook.ClanHook
 import dev.slne.surf.tab.core.client.hook.ContentCreatorHook
@@ -8,11 +10,13 @@ import dev.slne.surf.tab.core.client.hook.LuckPermsHook
 import dev.slne.surf.tab.core.client.hook.SurfPlaytimeHook
 import dev.slne.surf.tab.core.client.platform.TabPlatform
 import dev.slne.surf.tab.core.client.platform.TabPlayer
-import dev.slne.surf.tab.core.client.util.formatWithAdventure
-import dev.slne.surf.tab.core.client.util.tablistPlaceholders
+import dev.slne.surf.tab.core.client.util.AdventureTablistRenderer
+import dev.slne.surf.tab.core.client.util.formatTablistDate
+import dev.slne.surf.tab.core.client.util.formatTablistTime
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
+import java.time.ZonedDateTime
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
 
 val tablistService = TablistService()
 
@@ -38,33 +42,67 @@ class TablistService {
     )
 
     /**
-     * Sends the header and footer to everyone currently online.
+     * Counts the snapshots of [TablistValues] up, so that a later one is recognisable as the newer
+     * one no matter which thread took it.
      */
-    fun sendAdditionsToAll() = sendAdditions(TabPlatform.onlinePlayers())
+    private val generations = AtomicLong()
+
+    /**
+     * The analysed form of the configured templates.
+     */
+    @Volatile
+    private var analyzed: TablistTemplates? = null
+
+    private val additions = TablistAdditions(
+        templates = { templates() },
+        captureValues = { captureValues() },
+        onlinePlayers = { TabPlatform.onlinePlayers() },
+        onlinePlayerCount = { TabPlatform.onlinePlayerCount() },
+        renderer = AdventureTablistRenderer,
+        runUpdates = { block -> TabPlatform.launch { block() } }
+    )
+
+    /**
+     * The currently configured templates, analysing them again if the configuration moved on.
+     */
+    fun templates(): TablistTemplates {
+        val config = tablistConfig
+        val current = analyzed
+
+        if (current != null && current.matches(config.header, config.footer)) return current
+
+        val analyzed = TablistTemplates.analyze(config.header, config.footer, miniMessage)
+        this.analyzed = analyzed
+
+        return analyzed
+    }
+
+    /**
+     * Asks for everybody's header and footer to be brought up to date because of [reason].
+     */
+    fun invalidateAll(reason: TablistUpdateReason) = additions.invalidateAll(reason)
+
+    /**
+     * Brings [player]'s header and footer up to date right away, for a player who cannot wait for
+     * the next update of everybody because they have nothing yet.
+     */
+    fun invalidatePlayer(player: TabPlayer) = additions.invalidatePlayer(player)
+
+    /**
+     * Forgets everything remembered about [playerUuid], because they left.
+     */
+    fun forget(playerUuid: UUID) = additions.forget(playerUuid)
 
     /**
      * Re-sends the header, the footer and the entry of everyone currently online, as a configuration
      * reload has to.
      */
     fun refreshAll() {
-        val players = TabPlatform.onlinePlayers()
+        invalidateAll(TablistUpdateReason.CONFIGURATION)
 
-        sendAdditions(players)
-
-        for (player in players) {
+        for (player in TabPlatform.onlinePlayers()) {
             requestFormat(player)
         }
-    }
-
-    fun sendAdditions(player: TabPlayer) {
-        val config = tablistConfig
-
-        sendAdditions(
-            player,
-            config.header,
-            config.footer,
-            tablistPlaceholders(TabPlatform.onlinePlayerCount())
-        )
     }
 
     /**
@@ -80,31 +118,24 @@ class TablistService {
 
     fun isVanished(playerUuid: UUID) = TabPlatform.isVanished(playerUuid)
 
+    /**
+     * Reads everything the tablist fills its own placeholders with, once, for a whole update.
+     */
+    private fun captureValues(): TablistValues {
+        val now = ZonedDateTime.now()
+
+        return TablistValues(
+            generation = generations.incrementAndGet(),
+            server = SurfServer.current().name,
+            onlinePlayers = TabPlatform.onlinePlayerCount(),
+            maxPlayers = TabPlatform.maxPlayerCount(),
+            date = formatTablistDate(now),
+            time = formatTablistTime(now)
+        )
+    }
+
     private suspend fun formatPlayer(player: TabPlayer) {
         player.showTabEntry(formatDisplayName(player), LuckPermsHook.getWeight(player.uuid))
-    }
-
-    private fun sendAdditions(players: Collection<TabPlayer>) {
-        val config = tablistConfig
-        val header = config.header
-        val footer = config.footer
-        val placeholders = tablistPlaceholders(players.size)
-
-        for (player in players) {
-            sendAdditions(player, header, footer, placeholders)
-        }
-    }
-
-    private fun sendAdditions(
-        player: TabPlayer,
-        header: String,
-        footer: String,
-        placeholders: TagResolver
-    ) {
-        player.audience.sendPlayerListHeaderAndFooter(
-            header.formatWithAdventure(player, placeholders),
-            footer.formatWithAdventure(player, placeholders)
-        )
     }
 
     private suspend fun formatDisplayName(player: TabPlayer) = buildText {
