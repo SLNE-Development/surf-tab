@@ -4,7 +4,7 @@ import com.google.inject.Inject
 import dev.slne.minestom.lobby.api.event.EventRegistrar
 import dev.slne.minestom.lobby.api.extension.addListener
 import dev.slne.surf.playtime.api.minestom.event.AfkStateChangeEvent
-import dev.slne.surf.tab.core.client.service.tablistService
+import dev.slne.surf.tab.core.client.service.TablistService
 import dev.slne.surf.tab.minestom.platform.MinestomTabPlayer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -15,7 +15,7 @@ import net.minestom.server.event.EventNode
 class PlaytimeListener @Inject constructor() : EventRegistrar {
     override fun register(node: EventNode<Event>) {
         node.addListener<AfkStateChangeEvent> { event ->
-            tablistService.requestFormat(MinestomTabPlayer(event.player))
+            TablistService.requestFormat(MinestomTabPlayer(event.player))
         }
     }
 }

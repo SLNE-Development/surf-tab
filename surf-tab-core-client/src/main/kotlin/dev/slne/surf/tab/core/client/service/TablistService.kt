@@ -20,8 +20,6 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration.Companion.seconds
 
-val tablistService = TablistService()
-
 private val log = logger()
 
 private val tabEntryUpdateTimeout = 5.seconds
@@ -41,7 +39,7 @@ private val vanishTag = buildText {
     appendSpace()
 }
 
-class TablistService {
+object TablistService {
 
     private val entryUpdater = TabEntryUpdater<TabPlayer>(
         baseName = { player -> player.baseNameSnapshot() },
