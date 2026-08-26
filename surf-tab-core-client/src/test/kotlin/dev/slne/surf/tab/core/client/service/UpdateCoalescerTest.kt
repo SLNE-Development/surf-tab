@@ -21,6 +21,7 @@ import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -258,6 +259,36 @@ class UpdateCoalescerTest {
 
             assertEquals("stuck", withTimeout(1.seconds) { timedOut.await() })
             assertEquals("newest", withTimeout(1.seconds) { newestApplied.await() })
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    @Test
+    fun `an update immune to cancellation does not wedge the key`() = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val timedOut = CompletableDeferred<Unit>()
+        val applied = CompletableDeferred<String>()
+
+        try {
+            val coalescer = UpdateCoalescer<String>(
+                runUpdates = { block -> scope.launch { block() } },
+                updateTimeout = 50.milliseconds,
+                onTimeout = { _, _ -> timedOut.complete(Unit) },
+                update = { target ->
+                    if (target == "leaked") {
+                        suspendCoroutine {}
+                    } else {
+                        applied.complete(target)
+                    }
+                }
+            )
+
+            coalescer.request(key, "leaked")
+            withTimeout(1.seconds) { timedOut.await() }
+            coalescer.request(key, "after")
+
+            assertEquals("after", withTimeout(1.seconds) { applied.await() })
         } finally {
             scope.cancel()
         }
