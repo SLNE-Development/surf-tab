@@ -7,7 +7,7 @@ import dev.slne.clan.api.clan.listener.ClanDeletedListener
 import dev.slne.clan.api.clan.listener.ClanUpdateMemberListener
 import dev.slne.clan.api.clan.listener.ClanUpdatedListener
 import dev.slne.surf.tab.core.client.platform.TabPlatform
-import dev.slne.surf.tab.core.client.service.tablistService
+import dev.slne.surf.tab.core.client.service.TablistService
 import net.kyori.adventure.text.Component
 import java.util.*
 
@@ -26,7 +26,7 @@ object ClanHook {
         TabPlatform.launch {
             for (member in clan.members) {
                 val player = TabPlatform.player(member.uuid) ?: continue
-                tablistService.requestFormat(player)
+                TablistService.requestFormat(player)
             }
         }
     }

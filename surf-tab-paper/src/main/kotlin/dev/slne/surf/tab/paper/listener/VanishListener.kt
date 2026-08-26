@@ -1,6 +1,6 @@
 package dev.slne.surf.tab.paper.listener
 
-import dev.slne.surf.tab.core.client.service.tablistService
+import dev.slne.surf.tab.core.client.service.TablistService
 import dev.slne.surf.tab.paper.platform.PaperTabPlayer
 import dev.slne.surf.vanish.api.event.PlayerNickEvent
 import dev.slne.surf.vanish.api.event.PlayerReappearEvent
@@ -26,6 +26,6 @@ object VanishListener : Listener {
     private fun requestFormat(player: Player?) {
         if (player == null) return
 
-        tablistService.requestFormat(PaperTabPlayer(player))
+        TablistService.requestFormat(PaperTabPlayer(player))
     }
 }

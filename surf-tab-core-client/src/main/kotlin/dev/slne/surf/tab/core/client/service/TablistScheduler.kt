@@ -47,13 +47,13 @@ object TablistScheduler {
     private suspend fun run() {
         while (currentCoroutineContext().isActive) {
             val tick = nextTick(
-                tablistService.templates(),
+                TablistService.templates(),
                 ZonedDateTime.now(),
                 tablistConfig.unknownPlaceholderRefreshSeconds.seconds
             )
 
             delay(tick.delay)
-            tick.reason?.let { tablistService.invalidateAll(it) }
+            tick.reason?.let { TablistService.invalidateAll(it) }
         }
     }
 

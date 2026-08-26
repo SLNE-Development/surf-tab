@@ -3,7 +3,7 @@ package dev.slne.surf.tab.core.client.command
 import dev.slne.surf.api.core.messages.adventure.sendText
 import dev.slne.surf.tab.core.client.config.tablistConfiguration
 import dev.slne.surf.tab.core.client.platform.TabPlatform
-import dev.slne.surf.tab.core.client.service.tablistService
+import dev.slne.surf.tab.core.client.service.TablistService
 import net.kyori.adventure.audience.Audience
 
 /**
@@ -13,7 +13,7 @@ fun reloadTablist() {
     tablistConfiguration.reload()
 
     TabPlatform.launch {
-        tablistService.refreshAll()
+        TablistService.refreshAll()
     }
 }
 

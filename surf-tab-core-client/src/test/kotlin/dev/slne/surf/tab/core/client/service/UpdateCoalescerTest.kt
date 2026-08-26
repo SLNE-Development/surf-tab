@@ -21,6 +21,7 @@ import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -342,6 +343,13 @@ class UpdateCoalescerTest {
             )
         } finally {
             scope.cancel()
+        }
+    }
+
+    @Test
+    fun `a timeout that is not positive is rejected on construction`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            UpdateCoalescer<String>(::runHere, updateTimeout = Duration.ZERO) {}
         }
     }
 

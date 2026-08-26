@@ -141,6 +141,8 @@ internal class TestPlayer(val name: String, override val uuid: UUID = UUID.rando
 
     override fun baseName(): Component = Component.text(name)
 
+    override suspend fun baseNameSnapshot(): Component = baseName()
+
     override suspend fun showTabEntry(name: Component, order: Int) = Unit
 
     /** The header this player is currently showing, as plain text. */

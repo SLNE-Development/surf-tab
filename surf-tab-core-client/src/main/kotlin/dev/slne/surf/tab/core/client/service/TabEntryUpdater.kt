@@ -34,6 +34,12 @@ class TabEntryUpdater<T>(
     private val onPartFailure: (TabEntryPart, T, Throwable) -> Unit
 ) {
 
+    init {
+        require(clanTimeout.isPositive()) {
+            "clanTimeout must be positive but was $clanTimeout"
+        }
+    }
+
     suspend fun update(target: T) {
         val base = baseName(target)
         val order = resolve(TabEntryPart.ORDER, target, 0) { order(target) }

@@ -5,7 +5,7 @@ import dev.slne.surf.content.creator.api.ContentCreatorPlatform
 import dev.slne.surf.content.creator.api.listener.StateChangeListener
 import dev.slne.surf.content.creator.api.platform.PlatformState
 import dev.slne.surf.tab.core.client.platform.TabPlatform
-import dev.slne.surf.tab.core.client.service.tablistService
+import dev.slne.surf.tab.core.client.service.TablistService
 import net.kyori.adventure.text.Component
 import java.util.*
 
@@ -22,7 +22,7 @@ object ContentCreatorHook {
             ) {
                 TabPlatform.launch {
                     TabPlatform.player(playerUuid)?.let {
-                        tablistService.requestFormat(it)
+                        TablistService.requestFormat(it)
                     }
                 }
             }

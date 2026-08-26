@@ -45,6 +45,12 @@ internal class UpdateCoalescer<T>(
     private val update: suspend (T) -> Unit
 ) {
 
+    init {
+        require(updateTimeout.isPositive()) {
+            "updateTimeout must be positive but was $updateTimeout"
+        }
+    }
+
     /**
      * Stores the current request for every key with an active update loop.
      *

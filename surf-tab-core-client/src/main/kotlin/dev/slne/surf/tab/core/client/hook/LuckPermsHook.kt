@@ -2,7 +2,7 @@ package dev.slne.surf.tab.core.client.hook
 
 import dev.slne.surf.api.core.luckperms.LuckPermsAccess
 import dev.slne.surf.tab.core.client.platform.TabPlatform
-import dev.slne.surf.tab.core.client.service.tablistService
+import dev.slne.surf.tab.core.client.service.TablistService
 import net.luckperms.api.model.user.User
 import java.util.*
 
@@ -19,7 +19,7 @@ object LuckPermsHook {
     fun updatePlayerInTablist(user: User) {
         TabPlatform.launch {
             TabPlatform.player(user.uniqueId)?.let {
-                tablistService.requestFormat(it)
+                TablistService.requestFormat(it)
             }
         }
     }
