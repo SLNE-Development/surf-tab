@@ -1,8 +1,15 @@
 package dev.slne.surf.tab.core.client.service
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -137,15 +144,22 @@ internal class UpdateCoalescer<T>(
 
         while (true) {
             try {
+                val failure = AtomicReference<Throwable>()
+                val pass = startPass(current.target, failure)
+
                 val completed = withTimeoutOrNull(updateTimeout) {
-                    update(current.target)
+                    pass.join()
                     true
                 }
 
                 if (completed == null) {
+                    pass.cancel()
+
                     runCatching {
                         onTimeout(key, current.target)
                     }
+                } else {
+                    failure.get()?.let { throw it }
                 }
             } catch (throwable: Throwable) {
                 giveUp(key, current)
@@ -159,6 +173,25 @@ internal class UpdateCoalescer<T>(
 
             current = inFlight.getValue(key)
         }
+    }
+
+    private suspend fun startPass(target: T, failure: AtomicReference<Throwable>): Job {
+        val context = currentCoroutineContext()
+        val supervisor = SupervisorJob(context[Job])
+
+        val pass = CoroutineScope(context + supervisor).launch {
+            try {
+                update(target)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (throwable: Throwable) {
+                failure.set(throwable)
+            }
+        }
+
+        supervisor.complete()
+
+        return pass
     }
 
     /**
