@@ -6,12 +6,13 @@ import dev.slne.surf.api.paper.extensions.pluginManager
 import dev.slne.surf.tab.core.client.hook.ClanHook
 import dev.slne.surf.tab.core.client.hook.ContentCreatorHook
 import dev.slne.surf.tab.core.client.redis.redisLoader
-import dev.slne.surf.tab.core.client.service.TablistScheduler
+import dev.slne.surf.tab.core.client.service.TablistService
 import dev.slne.surf.tab.paper.command.surfTabCommand
 import dev.slne.surf.tab.paper.hook.registerLuckPermsListeners
 import dev.slne.surf.tab.paper.listener.PlayerListener
 import dev.slne.surf.tab.paper.listener.PlaytimeListener
 import dev.slne.surf.tab.paper.listener.VanishListener
+import dev.slne.surf.tab.paper.platform.PaperTabPlatform
 import org.bukkit.plugin.java.JavaPlugin
 
 val plugin get() = JavaPlugin.getPlugin(PaperMain::class.java)
@@ -22,7 +23,7 @@ class PaperMain : SuspendingJavaPlugin() {
         redisLoader.connect()
         surfTabCommand()
 
-        TablistScheduler.startTask()
+        TablistService.start(PaperTabPlatform())
         registerLuckPermsListeners()
         PlayerListener.register()
 
@@ -43,7 +44,7 @@ class PaperMain : SuspendingJavaPlugin() {
     }
 
     override fun onDisable() {
-        TablistScheduler.cancelTask()
+        TablistService.stop()
         redisLoader.disconnect()
     }
 }

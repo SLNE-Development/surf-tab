@@ -1,5 +1,6 @@
 package dev.slne.surf.tab.core.client.service
 
+import dev.slne.surf.tab.core.client.service.TablistUpdateReason
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotSame
 import org.junit.jupiter.api.Assertions.assertSame
@@ -168,7 +169,7 @@ class TablistAdditionsTest {
         val packets = alice.received.size
         val renders = tablist.renderer.rendersOf(PER_PLAYER_FOOTER)
 
-        repeat(3) { tablist.additions.invalidateAll(TablistUpdateReason.UNKNOWN_PLACEHOLDERS) }
+        repeat(3) { tablist.additions.invalidateAll(TablistUpdateReason.UnknownPlaceholders) }
 
         assertTrue(
             tablist.renderer.rendersOf(PER_PLAYER_FOOTER) > renders,
@@ -203,7 +204,7 @@ class TablistAdditionsTest {
 
         tablist.additions.invalidateAll(TablistUpdateReason.CLOCK)
         tablist.additions.invalidateAll(TablistUpdateReason.PLAYER_COUNT)
-        tablist.additions.invalidateAll(TablistUpdateReason.UNKNOWN_PLACEHOLDERS)
+        tablist.additions.invalidateAll(TablistUpdateReason.UnknownPlaceholders)
 
         assertEquals(0, updates)
         assertEquals(1, alice.received.size, "only what they were shown when they joined")
@@ -215,7 +216,7 @@ class TablistAdditionsTest {
         val alice = tablist.join(TestPlayer("alice"))
 
         tablist.templates = TablistTemplates.analyze("<red>welcome", "<blue>bye", tablist.miniMessage)
-        tablist.additions.invalidateAll(TablistUpdateReason.CONFIGURATION)
+        tablist.additions.invalidateAll(TablistUpdateReason.Configuration)
 
         assertEquals("welcome", alice.header())
     }
@@ -237,7 +238,7 @@ class TablistAdditionsTest {
         }
 
         tablist.time = "09:06"
-        tablist.additions.invalidateAll(TablistUpdateReason.CONFIGURATION)
+        tablist.additions.invalidateAll(TablistUpdateReason.Configuration)
 
         assertTrue(alice.received.size >= 1)
         assertTrue(
@@ -267,17 +268,17 @@ class TablistAdditionsTest {
         val ghost = TestPlayer("ghost")
 
         tablist.players += ghost
-        tablist.additions.invalidateAll(TablistUpdateReason.CONFIGURATION)
+        tablist.additions.invalidateAll(TablistUpdateReason.Configuration)
         assertEquals(1, ghost.received.size)
 
         // Taken off the server without anything saying so, then walked over by an update.
         tablist.players -= ghost
-        tablist.additions.invalidateAll(TablistUpdateReason.CONFIGURATION)
+        tablist.additions.invalidateAll(TablistUpdateReason.Configuration)
 
         // Back again, with nothing about them remembered, so they are sent to even though what they
         // are shown did not change in the meantime.
         tablist.players += ghost
-        tablist.additions.invalidateAll(TablistUpdateReason.CONFIGURATION)
+        tablist.additions.invalidateAll(TablistUpdateReason.Configuration)
 
         assertEquals(2, ghost.received.size)
         assertEquals(1, alice.received.size, "alice was shown the same thing throughout")

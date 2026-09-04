@@ -1,32 +1,56 @@
 package dev.slne.surf.tab.core.client.service
 
+import dev.slne.surf.tab.api.placeholder.TabPlaceholder
+import net.kyori.adventure.text.Component
+
 /**
- * Everything the tablist fills its own placeholders with, read once for a whole update.
+ * Immutable snapshot of placeholder values captured for a single tab list update.
  *
- * @param generation counts snapshots up, so that a later snapshot is recognisable as the newer one
- * @param server the name of this server
- * @param onlinePlayers how many players were on this server when the snapshot was taken
- * @param maxPlayers how many players this server had room for when the snapshot was taken
- * @param date the day the snapshot was taken, already written the way the tablist spells it
- * @param time the time the snapshot was taken, already written the way the tablist spells it
+ * Each referenced placeholder is evaluated at most once when the snapshot is created, ensuring that
+ * all templates rendered from this snapshot observe the same value. [generation] provides an ordering
+ * between snapshots created by different updates.
+ *
+ * @property generation monotonically increasing identifier of this snapshot
+ * @property onlinePlayers the number of players online when this snapshot was captured
  */
 class TablistValues(
     val generation: Long,
-    val server: String,
-    val onlinePlayers: Int,
-    val maxPlayers: Int,
-    val date: String,
-    val time: String
+    private val values: Map<TabPlaceholder, Component>,
+    val onlinePlayers: Int
 ) {
+
+    /**
+     * The placeholders for which this snapshot contains a successfully captured value.
+     */
+    val placeholders: Set<TabPlaceholder> get() = values.keys
+
+    /**
+     * Returns the value captured for [placeholder].
+     *
+     * @param placeholder the placeholder whose captured value should be returned
+     * @return the captured component, or `null` if no value is present in this snapshot
+     */
+    fun read(placeholder: TabPlaceholder): Component? = values[placeholder]
+
+    /**
+     * Determines whether [placeholder] has a different captured value than in [previous].
+     *
+     * Missing values are compared as `null`, so a placeholder becoming available or unavailable is
+     * also considered a change.
+     *
+     * @param placeholder the placeholder to compare
+     * @param previous the snapshot to compare against
+     * @return `true` if the captured values differ, otherwise `false`
+     */
+    fun changed(placeholder: TabPlaceholder, previous: TablistValues): Boolean {
+        return read(placeholder) != previous.read(placeholder)
+    }
 
     override fun toString(): String {
         return "TablistValues(" +
                 "generation=$generation, " +
-                "server='$server', " +
                 "onlinePlayers=$onlinePlayers, " +
-                "maxPlayers=$maxPlayers, " +
-                "date='$date', " +
-                "time='$time'" +
+                "values=${values.keys.map { it.tagName }}" +
                 ")"
     }
 }

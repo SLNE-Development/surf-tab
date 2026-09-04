@@ -1,6 +1,8 @@
 package dev.slne.surf.tab.core.client.service
 
+import dev.slne.surf.tab.api.placeholder.TabPlaceholder
 import dev.slne.surf.tab.core.client.config.TablistConfig
+import dev.slne.surf.tab.core.client.service.TablistUpdateReason
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -22,24 +24,34 @@ class TablistTemplateTest {
         maxPlayers: Int = 1000,
         date: String = "07.03.2024",
         time: String = "09:05"
-    ) = TablistValues(generation, server, onlinePlayers, maxPlayers, date, time)
+    ) = TablistValues(
+        generation,
+        mapOf(
+            BuiltinPlaceholder.SERVER to Component.text(server),
+            BuiltinPlaceholder.PLAYERS_ONLINE to Component.text(onlinePlayers),
+            BuiltinPlaceholder.PLAYERS_MAX to Component.text(maxPlayers),
+            BuiltinPlaceholder.DATE to Component.text(date),
+            BuiltinPlaceholder.TIME to Component.text(time)
+        ),
+        onlinePlayers
+    )
 
     @Test
     fun `a template knows which placeholders it names`() {
         val template = analyze("<date> <gray>-</gray> <time> <players_online>")
 
-        assertTrue(template.dependsOn(TablistPlaceholder.DATE))
-        assertTrue(template.dependsOn(TablistPlaceholder.TIME))
-        assertTrue(template.dependsOn(TablistPlaceholder.PLAYERS_ONLINE))
-        assertFalse(template.dependsOn(TablistPlaceholder.PLAYERS_MAX))
-        assertFalse(template.dependsOn(TablistPlaceholder.SERVER))
+        assertTrue(template.dependsOn(BuiltinPlaceholder.DATE))
+        assertTrue(template.dependsOn(BuiltinPlaceholder.TIME))
+        assertTrue(template.dependsOn(BuiltinPlaceholder.PLAYERS_ONLINE))
+        assertFalse(template.dependsOn(BuiltinPlaceholder.PLAYERS_MAX))
+        assertFalse(template.dependsOn(BuiltinPlaceholder.SERVER))
     }
 
     @Test
     fun `colours and line breaks are not something a template depends on`() {
         val template = analyze("<br><#6EA6D9>CASTCRAFTER<br><bold><gradient:red:blue>hi</gradient>")
 
-        assertEquals(emptySet<TablistPlaceholder>(), template.placeholders)
+        assertEquals(emptySet<TabPlaceholder>(), template.placeholders)
         assertEquals(emptySet<String>(), template.unknownTags)
         assertFalse(template.rendersPerPlayer)
     }
@@ -58,7 +70,7 @@ class TablistTemplateTest {
         // straight past is still recognised as something the template depends on.
         val template = analyze("<hover:show_text:'<time> - <player_ping>'>hover me</hover>")
 
-        assertTrue(template.dependsOn(TablistPlaceholder.TIME))
+        assertTrue(template.dependsOn(BuiltinPlaceholder.TIME))
         assertEquals(setOf("player_ping"), template.unknownTags)
     }
 
@@ -66,7 +78,7 @@ class TablistTemplateTest {
     fun `an escaped placeholder is not something a template depends on`() {
         val template = analyze("\\<time> is written out rather than filled in")
 
-        assertEquals(emptySet<TablistPlaceholder>(), template.placeholders)
+        assertEquals(emptySet<TabPlaceholder>(), template.placeholders)
         assertFalse(template.rendersPerPlayer)
     }
 
@@ -76,10 +88,10 @@ class TablistTemplateTest {
 
         assertEquals(
             setOf(
-                TablistPlaceholder.DATE,
-                TablistPlaceholder.TIME,
-                TablistPlaceholder.PLAYERS_ONLINE,
-                TablistPlaceholder.PLAYERS_MAX
+                BuiltinPlaceholder.DATE,
+                BuiltinPlaceholder.TIME,
+                BuiltinPlaceholder.PLAYERS_ONLINE,
+                BuiltinPlaceholder.PLAYERS_MAX
             ),
             template.placeholders
         )
@@ -91,7 +103,7 @@ class TablistTemplateTest {
     fun `the shipped footer depends on nothing that ever changes`() {
         val template = analyze(TablistConfig().footer)
 
-        assertEquals(setOf(TablistPlaceholder.SERVER), template.placeholders)
+        assertEquals(setOf(BuiltinPlaceholder.SERVER), template.placeholders)
         assertFalse(template.rendersPerPlayer)
         assertFalse(
             template.inputsChanged(values(), values(generation = 2, onlinePlayers = 900, time = "23:59")),
@@ -140,10 +152,10 @@ class TablistTemplateTest {
     fun `the header and the footer are asked about separately`() {
         val templates = TablistTemplates.analyze("<time>", "<players_online>", miniMessage)
 
-        assertTrue(templates.header.dependsOn(TablistPlaceholder.TIME))
-        assertFalse(templates.footer.dependsOn(TablistPlaceholder.TIME))
-        assertFalse(templates.header.dependsOn(TablistPlaceholder.PLAYERS_ONLINE))
-        assertTrue(templates.footer.dependsOn(TablistPlaceholder.PLAYERS_ONLINE))
+        assertTrue(templates.header.dependsOn(BuiltinPlaceholder.TIME))
+        assertFalse(templates.footer.dependsOn(BuiltinPlaceholder.TIME))
+        assertFalse(templates.header.dependsOn(BuiltinPlaceholder.PLAYERS_ONLINE))
+        assertTrue(templates.footer.dependsOn(BuiltinPlaceholder.PLAYERS_ONLINE))
     }
 
     @Test
@@ -152,8 +164,8 @@ class TablistTemplateTest {
 
         assertTrue(clockOnly.affectedBy(TablistUpdateReason.CLOCK))
         assertFalse(clockOnly.affectedBy(TablistUpdateReason.PLAYER_COUNT))
-        assertFalse(clockOnly.affectedBy(TablistUpdateReason.UNKNOWN_PLACEHOLDERS))
-        assertTrue(clockOnly.affectedBy(TablistUpdateReason.CONFIGURATION))
+        assertFalse(clockOnly.affectedBy(TablistUpdateReason.UnknownPlaceholders))
+        assertTrue(clockOnly.affectedBy(TablistUpdateReason.Configuration))
     }
 
     @Test
@@ -162,8 +174,8 @@ class TablistTemplateTest {
 
         assertFalse(static.affectedBy(TablistUpdateReason.CLOCK))
         assertFalse(static.affectedBy(TablistUpdateReason.PLAYER_COUNT))
-        assertFalse(static.affectedBy(TablistUpdateReason.UNKNOWN_PLACEHOLDERS))
-        assertTrue(static.affectedBy(TablistUpdateReason.CONFIGURATION))
+        assertFalse(static.affectedBy(TablistUpdateReason.UnknownPlaceholders))
+        assertTrue(static.affectedBy(TablistUpdateReason.Configuration))
         assertFalse(static.usesClock)
         assertFalse(static.rendersPerPlayer)
     }
@@ -172,7 +184,7 @@ class TablistTemplateTest {
     fun `an unknown placeholder in either template asks for the fallback`() {
         val templates = TablistTemplates.analyze("<red>hello", "<player_ping>", miniMessage)
 
-        assertTrue(templates.affectedBy(TablistUpdateReason.UNKNOWN_PLACEHOLDERS))
+        assertTrue(templates.affectedBy(TablistUpdateReason.UnknownPlaceholders))
         assertTrue(templates.rendersPerPlayer)
         assertFalse(templates.header.rendersPerPlayer, "only the footer named something unknown")
         assertTrue(templates.footer.rendersPerPlayer)

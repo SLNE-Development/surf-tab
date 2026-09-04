@@ -1,6 +1,6 @@
 package dev.slne.surf.tab.core.client.service
 
-import dev.slne.surf.tab.core.client.platform.TabPlayer
+import dev.slne.surf.tab.core.client.platform.TabViewer
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import java.util.*
@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap
 class TablistAdditions(
     private val templates: () -> TablistTemplates,
     private val captureValues: () -> TablistValues,
-    private val onlinePlayers: () -> Collection<TabPlayer>,
+    private val onlinePlayers: () -> Collection<TabViewer>,
     private val onlinePlayerCount: () -> Int,
     private val renderer: TablistRenderer,
     runUpdates: (suspend () -> Unit) -> Unit
@@ -46,7 +46,7 @@ class TablistAdditions(
     /**
      * Brings [player]'s header and footer up to date right away.
      */
-    fun invalidatePlayer(player: TabPlayer) {
+    fun invalidatePlayer(player: TabViewer) {
         val templates = templates()
         val values = captureValues()
         val placeholders = renderer.placeholders(values)
@@ -112,7 +112,7 @@ class TablistAdditions(
      */
     private fun render(
         template: TablistTemplate,
-        player: TabPlayer,
+        player: TabViewer,
         values: TablistValues,
         placeholders: TagResolver
     ) = shared(template, values, placeholders)
@@ -122,7 +122,7 @@ class TablistAdditions(
      * Sends [header] and [footer] to [player], unless they are already showing them.
      */
     private fun send(
-        player: TabPlayer,
+        player: TabViewer,
         values: TablistValues,
         header: Component,
         footer: Component
@@ -176,7 +176,7 @@ private class SentAdditions {
      * update newer than [values] got there first.
      */
     fun send(
-        player: TabPlayer,
+        player: TabViewer,
         values: TablistValues,
         header: Component,
         footer: Component

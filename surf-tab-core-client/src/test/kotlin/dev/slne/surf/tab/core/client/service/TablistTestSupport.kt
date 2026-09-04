@@ -1,6 +1,8 @@
 package dev.slne.surf.tab.core.client.service
 
-import dev.slne.surf.tab.core.client.platform.TabPlayer
+import dev.slne.surf.tab.api.placeholder.TabPlaceholder
+import dev.slne.surf.tab.api.placeholder.UpdateCondition
+import dev.slne.surf.tab.core.client.platform.TabViewer
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
@@ -54,11 +56,14 @@ internal class TestTablist(header: String, footer: String) {
             beforeUpdate()
             TablistValues(
                 generation = generationOverride ?: generations.incrementAndGet(),
-                server = server,
-                onlinePlayers = players.size,
-                maxPlayers = maxPlayers,
-                date = date,
-                time = time
+                values = mapOf(
+                    BuiltinPlaceholder.SERVER to Component.text(server),
+                    BuiltinPlaceholder.PLAYERS_ONLINE to Component.text(players.size),
+                    BuiltinPlaceholder.PLAYERS_MAX to Component.text(maxPlayers),
+                    BuiltinPlaceholder.DATE to Component.text(date),
+                    BuiltinPlaceholder.TIME to Component.text(time)
+                ),
+                onlinePlayers = players.size
             )
         },
         onlinePlayers = { players.toList().also { duringUpdate() } },
@@ -96,17 +101,19 @@ internal class TestTablist(header: String, footer: String) {
         /** Every template that was rendered, in order, so that renders can be counted per template. */
         val rendered = CopyOnWriteArrayList<String>()
 
-        override fun placeholders(values: TablistValues): TagResolver = resolver(
-            tag(TablistPlaceholder.SERVER, values.server),
-            tag(TablistPlaceholder.PLAYERS_ONLINE, values.onlinePlayers.toString()),
-            tag(TablistPlaceholder.PLAYERS_MAX, values.maxPlayers.toString()),
-            tag(TablistPlaceholder.DATE, values.date),
-            tag(TablistPlaceholder.TIME, values.time)
-        )
+        override fun placeholders(values: TablistValues): TagResolver {
+            val resolvers = TagResolver.builder()
+
+            for (placeholder in values.placeholders) {
+                resolvers.tag(placeholder.tagName, selfClosingInserting(values.read(placeholder)!!))
+            }
+
+            return resolvers.build()
+        }
 
         override fun render(
             template: String,
-            player: TabPlayer?,
+            player: TabViewer?,
             placeholders: TagResolver
         ): Component {
             rendered += template
@@ -124,26 +131,17 @@ internal class TestTablist(header: String, footer: String) {
 
         /** How often [template] was rendered. */
         fun rendersOf(template: String) = rendered.count { it == template }
-
-        private fun tag(placeholder: TablistPlaceholder, value: String) =
-            resolver(placeholder.tagName, selfClosingInserting(Component.text(value)))
     }
 }
 
 /**
  * A player who writes down every header and footer they are sent.
  */
-internal class TestPlayer(val name: String, override val uuid: UUID = UUID.randomUUID()) : TabPlayer {
+internal class TestPlayer(val name: String, override val uuid: UUID = UUID.randomUUID()) : TabViewer {
 
     val received = CopyOnWriteArrayList<Pair<Component, Component>>()
 
     override val audience = recordingAudience { header, footer -> received += header to footer }
-
-    override fun baseName(): Component = Component.text(name)
-
-    override suspend fun baseNameSnapshot(): Component = baseName()
-
-    override suspend fun showTabEntry(name: Component, order: Int) = Unit
 
     /** The header this player is currently showing, as plain text. */
     fun header() = received.last().first.plain()
@@ -161,3 +159,11 @@ private fun recordingAudience(send: (Component, Component) -> Unit) = object : A
 }
 
 internal fun Component.plain(): String = PlainTextComponentSerializer.plainText().serialize(this)
+
+/**
+ * A placeholder a test registers alongside the built-in ones.
+ */
+internal class TestPlaceholder(override val tagName: String, private val value: () -> Component) : TabPlaceholder {
+    override val updates: UpdateCondition = UpdateCondition.OnDemand
+    override fun value(): Component = value.invoke()
+}

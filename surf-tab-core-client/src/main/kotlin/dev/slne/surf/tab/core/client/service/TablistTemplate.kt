@@ -1,5 +1,6 @@
 package dev.slne.surf.tab.core.client.service
 
+import dev.slne.surf.tab.api.placeholder.TabPlaceholder
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import it.unimi.dsi.fastutil.objects.ObjectSet
 import it.unimi.dsi.fastutil.objects.ObjectSets
@@ -9,35 +10,33 @@ import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.Tag
 import net.kyori.adventure.text.minimessage.tag.resolver.ArgumentQueue
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
-import java.util.*
 
 /**
- * One configured header or footer, together with what rendering it depends on.
+ * One header or footer, together with what rendering it depends on.
  *
- * A template is analysed once, when it is configured, and afterwards knows two things about itself:
+ * A template is analysed once and afterwards knows two things about itself:
  *
- * - which of the [TablistPlaceholder]s it mentions, which is what makes it possible to skip a render
- *   whose inputs did not move, and
- * - whether it mentions any tag the tablist cannot account for, which is what makes it necessary to
+ * - which known [TabPlaceholder]s it names, which is what makes it possible to skip a render whose
+ *   inputs did not move, and
+ * - whether it names any tag the tablist cannot account for, which is what makes it necessary to
  *   render it for every player separately.
  *
- * A template that only mentions tags MiniMessage itself renders and placeholders the tablist fills
- * in produces the very same component for everybody. It is therefore rendered once per update and
- * that one component is handed to every player. When the values it depends on did not move either,
- * even that render is skipped and the component of the previous update is reused - a footer built
- * from colours and the server name is rendered exactly once for the lifetime of the process.
+ * A template that only names tags MiniMessage itself renders and known placeholders produces the very
+ * same component for everybody. It is therefore rendered once per update and that one component is
+ * handed to every player. When the values it depends on did not move either, even that render is
+ * skipped and the component of the previous update is reused.
  *
  * Instances are immutable apart from the remembered render, which is only ever replaced as a whole,
  * and are safe to share between threads.
  *
- * @param source the template as it is written in the configuration
- * @param placeholders the placeholders the tablist fills in that this template mentions
- * @param unknownTags the tags this template mentions that neither MiniMessage nor the tablist knows
+ * @param source the template as it was written
+ * @param placeholders the known placeholders this template names
+ * @param unknownTags the tags this template names that neither MiniMessage nor the tablist knows
  * @param rendersPerPlayer whether this template has to be rendered for every player separately
  */
 class TablistTemplate internal constructor(
     val source: String,
-    val placeholders: EnumSet<TablistPlaceholder>,
+    val placeholders: Set<TabPlaceholder>,
     val unknownTags: ObjectSet<String>,
     val rendersPerPlayer: Boolean
 ) {
@@ -51,16 +50,16 @@ class TablistTemplate internal constructor(
     private var rendered: Rendered? = null
 
     /**
-     * Whether this template mentions [placeholder].
+     * Whether this template names [placeholder].
      */
-    fun dependsOn(placeholder: TablistPlaceholder) = placeholders.contains(placeholder)
+    fun dependsOn(placeholder: TabPlaceholder) = placeholders.contains(placeholder)
 
     /**
-     * Whether any placeholder this template mentions renders differently in [current] than it did in
+     * Whether any placeholder this template names renders differently in [current] than it did in
      * [previous].
      */
     fun inputsChanged(previous: TablistValues, current: TablistValues): Boolean {
-        return placeholders.any { it.changed(previous, current) }
+        return placeholders.any { current.changed(it, previous) }
     }
 
     /**
@@ -92,7 +91,7 @@ class TablistTemplate internal constructor(
 
     override fun toString(): String {
         return "TablistTemplate(" +
-                "placeholders=$placeholders, " +
+                "placeholders=${placeholders.map { it.tagName }}, " +
                 "unknownTags=$unknownTags, " +
                 "rendersPerPlayer=$rendersPerPlayer" +
                 ")"
@@ -105,12 +104,13 @@ class TablistTemplate internal constructor(
         /**
          * Analyses [source] and returns what rendering it depends on.
          *
-         * Every tag the template mentions is sorted into one of three groups. Tags the tablist fills
-         * in itself become the dependencies that decide when a new render is needed. Tags
-         * [miniMessage] resolves - colours, decorations, line breaks and whatever else the instance
-         * was built with - render the same for everybody and are ignored. Everything else is
-         * unknown: it may be a MiniPlaceholder that differs per audience and moves without ever
-         * saying so, so a template containing one is rendered per player and refreshed on a timer.
+         * Every tag the template names is sorted into one of three groups. Tags [resolve] knows -
+         * the tablist's own placeholders and everything a plugin registered - become the dependencies
+         * that decide when a new render is needed. Tags [miniMessage] resolves - colours, decorations,
+         * line breaks and whatever else the instance was built with - render the same for everybody
+         * and are ignored. Everything else is unknown: it may be a MiniPlaceholder that differs per
+         * audience and moves without ever saying so, so a template containing one is rendered per
+         * player and refreshed on a timer.
          *
          * Unknown is deliberately the fallback rather than the exception. A tag nobody resolves ends
          * up as literal text and would be safe to share, but telling that apart from a placeholder
@@ -121,20 +121,24 @@ class TablistTemplate internal constructor(
          * same way it does without any of this, whereas assuming it has no dependencies would leave
          * it quietly stale.
          */
-        fun analyze(source: String, miniMessage: MiniMessage): TablistTemplate {
+        fun analyze(
+            source: String,
+            miniMessage: MiniMessage,
+            resolve: (String) -> TabPlaceholder? = BuiltinPlaceholder::byTagName
+        ): TablistTemplate {
             val names = tagNamesIn(source, miniMessage)
                 ?: return TablistTemplate(
                     source = source,
-                    placeholders = EnumSet.noneOf(TablistPlaceholder::class.java),
+                    placeholders = emptySet(),
                     unknownTags = ObjectSets.emptySet(),
                     rendersPerPlayer = true
                 )
 
-            val placeholders = EnumSet.noneOf(TablistPlaceholder::class.java)
+            val placeholders = ObjectLinkedOpenHashSet<TabPlaceholder>()
             val unknownTags = ObjectLinkedOpenHashSet<String>()
 
             for (name in names) {
-                val placeholder = TablistPlaceholder.byTagName(name)
+                val placeholder = resolve(name)
 
                 when {
                     placeholder != null -> placeholders.add(placeholder)
@@ -147,7 +151,7 @@ class TablistTemplate internal constructor(
         }
 
         /**
-         * Every tag name [source] mentions, or `null` if it cannot be parsed.
+         * Every tag name [source] names, or `null` if it cannot be parsed.
          */
         private fun tagNamesIn(source: String, miniMessage: MiniMessage): Set<String>? {
             val recorder = TagNameRecorder()

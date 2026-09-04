@@ -1,9 +1,10 @@
 package dev.slne.surf.tab.core.client.service
 
+import dev.slne.surf.tab.api.placeholder.TabPlaceholder
 import net.kyori.adventure.text.minimessage.MiniMessage
 
 /**
- * The configured header and footer, analysed together.
+ * The header and the footer, analysed together.
  *
  * @param header the template shown above the player list
  * @param footer the template shown below the player list
@@ -11,18 +12,24 @@ import net.kyori.adventure.text.minimessage.MiniMessage
 class TablistTemplates(val header: TablistTemplate, val footer: TablistTemplate) {
 
     /**
-     * Whether either template mentions [placeholder].
+     * Whether either template names [placeholder].
      */
-    fun uses(placeholder: TablistPlaceholder): Boolean {
+    fun uses(placeholder: TabPlaceholder): Boolean {
         return header.dependsOn(placeholder) || footer.dependsOn(placeholder)
     }
 
     /**
-     * Whether either template mentions the date or the time, and therefore has to be rendered again
+     * Every known placeholder either template names.
+     */
+    val placeholders: Set<TabPlaceholder>
+        get() = header.placeholders + footer.placeholders
+
+    /**
+     * Whether either template names the date or the time, and therefore has to be rendered again
      * when the clock moves on.
      */
     val usesClock
-        get() = uses(TablistPlaceholder.DATE) || uses(TablistPlaceholder.TIME)
+        get() = uses(BuiltinPlaceholder.DATE) || uses(BuiltinPlaceholder.TIME)
 
     /**
      * Whether either template has to be rendered for every player separately.
@@ -34,10 +41,9 @@ class TablistTemplates(val header: TablistTemplate, val footer: TablistTemplate)
      * Whether an update for [reason] can change what either template renders as.
      */
     fun affectedBy(reason: TablistUpdateReason) = when (reason) {
-        TablistUpdateReason.PLAYER_COUNT -> uses(TablistPlaceholder.PLAYERS_ONLINE)
-        TablistUpdateReason.CLOCK -> usesClock
-        TablistUpdateReason.UNKNOWN_PLACEHOLDERS -> rendersPerPlayer
-        TablistUpdateReason.CONFIGURATION -> true
+        is TablistUpdateReason.Placeholders -> reason.placeholders.any { uses(it) }
+        TablistUpdateReason.UnknownPlaceholders -> rendersPerPlayer
+        TablistUpdateReason.Configuration -> true
     }
 
     /**
@@ -52,11 +58,17 @@ class TablistTemplates(val header: TablistTemplate, val footer: TablistTemplate)
     companion object {
 
         /**
-         * Analyses [header] and [footer] with [miniMessage].
+         * Analyses [header] and [footer] with [miniMessage], recognising the placeholders [resolve]
+         * knows.
          */
-        fun analyze(header: String, footer: String, miniMessage: MiniMessage) = TablistTemplates(
-            TablistTemplate.analyze(header, miniMessage),
-            TablistTemplate.analyze(footer, miniMessage)
+        fun analyze(
+            header: String,
+            footer: String,
+            miniMessage: MiniMessage,
+            resolve: (String) -> TabPlaceholder? = BuiltinPlaceholder::byTagName
+        ) = TablistTemplates(
+            TablistTemplate.analyze(header, miniMessage, resolve),
+            TablistTemplate.analyze(footer, miniMessage, resolve)
         )
     }
 }

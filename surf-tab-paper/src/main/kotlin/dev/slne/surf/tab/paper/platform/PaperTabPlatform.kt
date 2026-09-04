@@ -1,7 +1,6 @@
 package dev.slne.surf.tab.paper.platform
 
 import com.github.shynixn.mccoroutine.folia.launch
-import com.google.auto.service.AutoService
 import dev.slne.surf.tab.core.client.platform.TabPlatform
 import dev.slne.surf.tab.paper.hook.VanishHook
 import dev.slne.surf.tab.paper.isClansHook
@@ -13,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import org.bukkit.Bukkit
 import java.util.*
 
-@AutoService(TabPlatform::class)
 class PaperTabPlatform : TabPlatform {
     override val dataPath get() = plugin.dataPath
 

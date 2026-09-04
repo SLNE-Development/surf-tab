@@ -45,7 +45,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param onTimeout observes a pass that exceeded [updateTimeout]
  * @param update performs a single update for the supplied target
  */
-internal class UpdateCoalescer<T>(
+class UpdateCoalescer<T>(
     private val runUpdates: (suspend () -> Unit) -> Unit,
     private val updateTimeout: Duration = 5.seconds,
     private val onTimeout: (UUID, T) -> Unit = { _, _ -> },

@@ -1,5 +1,6 @@
 package dev.slne.surf.tab.core.client.service
 
+import dev.slne.surf.tab.core.client.service.TablistUpdateReason
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -47,7 +48,7 @@ class TablistSchedulerTest {
     fun `a placeholder nobody announces is looked at again on the fallback`() {
         val tick = nextTick("<red>hello", "<player_ping>")
 
-        assertEquals(TablistUpdateReason.UNKNOWN_PLACEHOLDERS, tick.reason)
+        assertEquals(TablistUpdateReason.UnknownPlaceholders, tick.reason)
         assertEquals(fallback, tick.delay)
     }
 
@@ -55,7 +56,7 @@ class TablistSchedulerTest {
     fun `whichever is due first is what the loop waits for`() {
         val tick = nextTick("<time>", "<player_ping>")
 
-        assertEquals(TablistUpdateReason.UNKNOWN_PLACEHOLDERS, tick.reason)
+        assertEquals(TablistUpdateReason.UnknownPlaceholders, tick.reason)
         assertEquals(fallback, tick.delay, "the fallback is due long before the minute is over")
     }
 

@@ -3,7 +3,6 @@ package dev.slne.surf.tab.minestom.listener
 import com.google.inject.Inject
 import dev.slne.minestom.lobby.api.event.EventRegistrar
 import dev.slne.minestom.lobby.api.extension.addListener
-import dev.slne.surf.tab.core.client.service.TablistUpdateReason
 import dev.slne.surf.tab.core.client.service.TablistService
 import dev.slne.surf.tab.minestom.platform.MinestomTabPlayer
 import net.minestom.server.event.Event
@@ -16,16 +15,11 @@ class PlayerListener @Inject constructor() : EventRegistrar {
         node.addListener<PlayerSpawnEvent> { event ->
             if (!event.isFirstSpawn) return@addListener
 
-            val player = MinestomTabPlayer(event.player)
-
-            TablistService.invalidatePlayer(player)
-            TablistService.requestFormat(player)
-            TablistService.invalidateAll(TablistUpdateReason.PLAYER_COUNT)
+            TablistService.viewerJoined(MinestomTabPlayer(event.player))
         }
 
         node.addListener<PlayerDisconnectEvent> { event ->
-            TablistService.forget(event.player.uuid)
-            TablistService.invalidateAll(TablistUpdateReason.PLAYER_COUNT)
+            TablistService.viewerLeft(event.player.uuid)
         }
     }
 }

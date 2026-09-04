@@ -1,6 +1,6 @@
 package dev.slne.surf.tab.core.client.service
 
-import dev.slne.surf.tab.core.client.platform.TabPlayer
+import dev.slne.surf.tab.core.client.platform.TabViewer
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 
@@ -20,5 +20,5 @@ interface TablistRenderer {
      * [player] is the audience placeholders are resolved against, or `null` when the template does
      * not mention anything that could differ per audience and one render is shared by everybody.
      */
-    fun render(template: String, player: TabPlayer?, placeholders: TagResolver): Component
+    fun render(template: String, player: TabViewer?, placeholders: TagResolver): Component
 }

@@ -1,191 +1,391 @@
 package dev.slne.surf.tab.core.client.service
 
-import dev.slne.surf.api.core.messages.adventure.buildText
+import dev.slne.surf.api.core.event.*
 import dev.slne.surf.api.core.minimessage.miniMessage
 import dev.slne.surf.api.core.util.logger
-import dev.slne.surf.core.api.common.server.SurfServer
+import dev.slne.surf.tab.api.placeholder.TabPlaceholder
+import dev.slne.surf.tab.api.placeholder.UpdateCondition
+import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
 import dev.slne.surf.tab.core.client.config.tablistConfig
-import dev.slne.surf.tab.core.client.hook.ClanHook
-import dev.slne.surf.tab.core.client.hook.ContentCreatorHook
-import dev.slne.surf.tab.core.client.hook.LuckPermsHook
-import dev.slne.surf.tab.core.client.hook.SurfPlaytimeHook
+import dev.slne.surf.tab.core.client.config.tablistConfiguration
+import dev.slne.surf.tab.core.client.entry.TabEntries
 import dev.slne.surf.tab.core.client.platform.TabPlatform
 import dev.slne.surf.tab.core.client.platform.TabPlayer
+import dev.slne.surf.tab.core.client.platform.tabPlatform
+import dev.slne.surf.tab.core.client.redis.redisApi
 import dev.slne.surf.tab.core.client.util.AdventureTablistRenderer
-import dev.slne.surf.tab.core.client.util.formatTablistDate
-import dev.slne.surf.tab.core.client.util.formatTablistTime
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import kotlinx.coroutines.CancellationException
 import net.kyori.adventure.text.Component
-import java.time.ZonedDateTime
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 private val log = logger()
 
-private val tabEntryUpdateTimeout = 5.seconds
-private val clanLookupTimeout = 2.seconds
-
-private val afkTag = buildText {
-    appendSpace()
-    darkSpacer("[")
-    spacer("AFK")
-    darkSpacer("]")
-}
-
-private val vanishTag = buildText {
-    darkSpacer("[")
-    note("V")
-    darkSpacer("]")
-    appendSpace()
-}
-
+/**
+ * Coordinates tab list rendering, placeholder updates, player entries, and lifecycle management.
+ *
+ * Header and footer content is rendered from the configured templates and applied only when the
+ * rendered result changes. Templates may reference built-in [BuiltinPlaceholder]s as well as
+ * placeholders registered by other plugins. Known placeholders are invalidated according to their
+ * [UpdateCondition], allowing templates to be re-rendered only when relevant data may have changed.
+ *
+ * Player entries are managed separately by [TabEntries].
+ */
 object TablistService {
 
-    private val entryUpdater = TabEntryUpdater<TabPlayer>(
-        baseName = { player -> player.baseNameSnapshot() },
-        order = { player -> LuckPermsHook.getWeight(player.uuid) },
-        vanishTag = { player -> getVanishTag(player.uuid) },
-        clanTag = { player -> getClanTag(player.uuid) },
-        liveTag = { player -> getLiveTag(player.uuid) },
-        afkTag = { player -> getAfkTag(player.uuid) },
-        show = { player, name, order -> player.showTabEntry(name, order) },
-        clanTimeout = clanLookupTimeout,
-        onPartFailure = { part, player, failure ->
-            log.atWarning()
-                .withCause(failure)
-                .log("Failed to resolve tablist part %s for player %s", part, player.uuid)
-        }
-    )
+    private val builtins = BuiltinPlaceholder.entries.associateBy { it.tagName }
 
-    private val updates = UpdateCoalescer(
-        runUpdates = { block -> TabPlatform.launch { block() } },
-        updateTimeout = tabEntryUpdateTimeout,
-        onTimeout = { playerUuid, _ ->
-            log.atWarning().log("Tablist update for player %s timed out", playerUuid)
-        },
-        update = entryUpdater::update
-    )
+    private val registered = ConcurrentHashMap<String, TabPlaceholder>()
 
     /**
-     * Counts the snapshots of [TablistValues] up, so that a later one is recognisable as the newer
-     * one no matter which thread took it.
+     * Stores the event bus listener registrations installed for each placeholder using
+     * [UpdateCondition.OnEvent].
+     */
+    private val eventTriggers = ConcurrentHashMap<String, List<Any>>()
+
+    /**
+     * Tracks changes to the set of available placeholders.
+     *
+     * Template analyses capture this version so cached analyses are discarded whenever a placeholder
+     * is registered or unregistered.
+     */
+    private val placeholderVersion = AtomicInteger()
+
+    @Volatile
+    private var started = false
+
+    /**
+     * Generates monotonically increasing identifiers for captured [TablistValues] snapshots.
+     *
+     * This allows snapshots created concurrently to be ordered independently of the thread on which
+     * they were captured.
      */
     private val generations = AtomicLong()
 
-    /**
-     * The analysed form of the configured templates.
-     */
     @Volatile
-    private var analyzed: TablistTemplates? = null
+    private var analyzed: Analyzed? = null
+
+    private val entries = TabEntries()
 
     private val additions = TablistAdditions(
         templates = { templates() },
-        captureValues = { captureValues() },
-        onlinePlayers = { TabPlatform.onlinePlayers() },
-        onlinePlayerCount = { TabPlatform.onlinePlayerCount() },
+        captureValues = { captureValues(templates()) },
+        onlinePlayers = { tabPlatform.onlinePlayers() },
+        onlinePlayerCount = { tabPlatform.onlinePlayerCount() },
         renderer = AdventureTablistRenderer,
-        runUpdates = { block -> TabPlatform.launch { block() } }
+        runUpdates = { block -> tabPlatform.launch { block() } }
     )
 
     /**
-     * The currently configured templates, analysing them again if the configuration moved on.
+     * Binds the supplied [platform] and starts the tab list service.
+     *
+     * The current templates are analyzed before the service is marked as started so invalid
+     * configuration fails immediately during startup. Once initialized, the scheduler is started and
+     * both header/footer content and all currently online player entries are rendered.
+     *
+     * @param platform the platform implementation used by the tab list service
+     * @throws IllegalStateException if the service has already been started
+     */
+    @Synchronized
+    fun start(platform: TabPlatform) {
+        check(!started) { "The tablist was already started" }
+
+        tabPlatform = platform
+        templates()
+
+        started = true
+        entries.start()
+        TablistScheduler.startTask()
+        refreshHeaderFooter()
+        entries.updateAll()
+    }
+
+    /**
+     * Stops the tab list service.
+     *
+     * The scheduler is cancelled and processing of new player entry updates is disabled. Calling this
+     * method while the service is already stopped has no effect.
+     */
+    @Synchronized
+    fun stop() {
+        if (!started) return
+
+        TablistScheduler.cancelTask()
+        entries.stop()
+        started = false
+    }
+
+    /**
+     * Handles a player joining the server.
+     *
+     * The joining player's header and footer are rendered, the player-count-dependent content of all
+     * viewers is invalidated, and the player's tab list entry is updated.
+     *
+     * @param viewer the player that joined
+     */
+    fun viewerJoined(viewer: TabPlayer) {
+        tabPlatform.launch {
+            additions.invalidatePlayer(viewer)
+            additions.invalidateAll(TablistUpdateReason.PLAYER_COUNT)
+            entries.updateEntry(viewer.uuid)
+        }
+    }
+
+    /**
+     * Handles a player leaving the server.
+     *
+     * Cached rendering state for the player is discarded and player-count-dependent content is
+     * invalidated for the remaining viewers.
+     *
+     * @param viewerUuid the UUID of the player that left
+     */
+    fun viewerLeft(viewerUuid: UUID) {
+        additions.forget(viewerUuid)
+        entries.forget(viewerUuid)
+        additions.invalidateAll(TablistUpdateReason.PLAYER_COUNT)
+    }
+
+    /**
+     * Registers a custom [placeholder] for use in tab list templates.
+     *
+     * Event-based update conditions are installed immediately. Registering a placeholder invalidates
+     * the cached template analysis and refreshes the header and footer when the service is running.
+     *
+     * @param placeholder the placeholder to register
+     * @throws IllegalArgumentException if the placeholder name is not lowercase, conflicts with a
+     * built-in placeholder, is already registered, or contains an unsupported event update condition
+     */
+    fun registerPlaceholder(placeholder: TabPlaceholder) {
+        val name = placeholder.tagName
+
+        require(name == name.lowercase()) { "Placeholder tag names are lower case, '$name' is not" }
+        require(name !in builtins) { "'$name' is a placeholder the tablist fills in itself" }
+        require(registered.putIfAbsent(name, placeholder) == null) {
+            "A placeholder named '$name' is already registered"
+        }
+
+        eventTriggers[name] = UpdateCondition.flatten(placeholder.updates)
+            .filterIsInstance<UpdateCondition.OnEvent<*>>()
+            .map { condition -> installTrigger(condition) { invalidate(setOf(placeholder)) } }
+
+        placeholderVersion.incrementAndGet()
+        refreshHeaderFooter()
+    }
+
+    /**
+     * Unregisters a previously registered [placeholder].
+     *
+     * Any event listeners installed for its [UpdateCondition.OnEvent] conditions are removed, cached
+     * template analysis is invalidated, and the header and footer are refreshed when the service is
+     * running.
+     *
+     * If the exact placeholder instance is not registered under its tag name, this method has no
+     * effect.
+     *
+     * @param placeholder the placeholder to unregister
+     */
+    fun unregisterPlaceholder(placeholder: TabPlaceholder) {
+        if (!registered.remove(placeholder.tagName, placeholder)) return
+
+        eventTriggers.remove(placeholder.tagName)?.forEach(SurfEventBus::unregisterListeners)
+        placeholderVersion.incrementAndGet()
+        refreshHeaderFooter()
+    }
+
+    /**
+     * Marks the specified [placeholders] as potentially changed.
+     *
+     * Only templates referencing at least one of the placeholders are considered for re-rendering.
+     * Rendered content is applied only when it differs from the previously shown result.
+     *
+     * The request is ignored when [placeholders] is empty or the service has not been started.
+     *
+     * @param placeholders the placeholders whose values may have changed
+     */
+    fun invalidate(placeholders: Set<TabPlaceholder>) {
+        if (placeholders.isEmpty() || !started) return
+
+        additions.invalidateAll(TablistUpdateReason.Placeholders(placeholders))
+    }
+
+    /**
+     * Requests a complete header and footer refresh for all viewers.
+     *
+     * The request is ignored until [start] has initialized the platform.
+     */
+    fun refreshHeaderFooter() {
+        if (!started) return
+
+        additions.invalidateAll(TablistUpdateReason.Configuration)
+    }
+
+    /**
+     * Invalidates header and footer content for all viewers using the supplied [reason].
+     *
+     * The request is ignored while the service is stopped.
+     *
+     * @param reason the reason for invalidating the current rendered content
+     */
+    fun invalidateAll(reason: TablistUpdateReason) {
+        if (!started) return
+
+        additions.invalidateAll(reason)
+    }
+
+    /**
+     * Installs an event bus listener for the supplied [condition].
+     *
+     * Synchronous and asynchronous Surf events are registered through their corresponding event bus
+     * APIs. Matching events invoke [fire] at monitor priority.
+     *
+     * @param condition the event-based placeholder update condition
+     * @param fire the action invoked when a matching event is received
+     * @return the listener registration object required to unregister the handler later
+     * @throws IllegalArgumentException if the configured event type is neither a [SurfSyncEvent] nor
+     * a [SurfAsyncEvent]
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun installTrigger(condition: UpdateCondition.OnEvent<*>, fire: () -> Unit): Any {
+        val type = condition.type
+        val matches = condition.matches as (SurfEvent) -> Boolean
+
+        return when {
+            SurfSyncEvent::class.java.isAssignableFrom(type) -> {
+                SurfEventBus.registerHandler(
+                    eventClass = type as Class<SurfSyncEvent>,
+                    priority = SurfEventPriority.MONITOR,
+                    ignoreCancelled = false,
+                    handler = { event -> if (matches(event)) fire() }
+                )
+            }
+
+            SurfAsyncEvent::class.java.isAssignableFrom(type) -> {
+                SurfEventBus.registerAsyncHandler(
+                    eventClass = type as Class<SurfAsyncEvent>,
+                    priority = SurfEventPriority.MONITOR,
+                    ignoreCancelled = false,
+                    handler = { event -> if (matches(event)) fire() }
+                )
+            }
+
+            else -> error("${type.name} is neither a sync nor an async surf event")
+        }
+    }
+
+    /**
+     * Requests a re-render of the tab list entry for the player identified by [uuid].
+     *
+     * @param uuid the UUID of the player whose entry should be updated
+     */
+    fun updateEntry(uuid: UUID) = entries.updateEntry(uuid)
+
+    /**
+     * Broadcasts an entry update request for the player identified by [uuid] across the network.
+     *
+     * The request is published through Redis and may be handled by every participating server.
+     *
+     * @param uuid the UUID of the player whose entry should be updated
+     */
+    fun broadcastEntryUpdate(uuid: UUID) {
+        redisApi.publishEvent(TabEntryUpdateRedisEvent(uuid)).invokeOnCompletion { e ->
+            if (e != null) {
+                log.atWarning()
+                    .withCause(e)
+                    .log("Failed to broadcast tab entry update for player $uuid")
+            }
+        }
+    }
+
+    /**
+     * Reloads the tab list configuration and refreshes all rendered content.
+     *
+     * Both header/footer content and every currently known player entry are requested for re-rendering.
+     */
+    fun reload() {
+        tablistConfiguration.reload()
+        refreshHeaderFooter()
+        entries.updateAll()
+    }
+
+    /**
+     * Returns the currently configured tab list templates analyzed against the available placeholders.
+     *
+     * The previous analysis is reused while both the configured header/footer source and the set of
+     * registered placeholders remain unchanged. Otherwise, the templates are analyzed again and the
+     * result is cached.
+     *
+     * @return the analyzed tab list templates
      */
     fun templates(): TablistTemplates {
         val config = tablistConfig
+        val version = placeholderVersion.get()
         val current = analyzed
 
-        if (current != null && current.matches(config.header, config.footer)) return current
-
-        val analyzed = TablistTemplates.analyze(config.header, config.footer, miniMessage)
-        this.analyzed = analyzed
-
-        return analyzed
-    }
-
-    /**
-     * Asks for everybody's header and footer to be brought up to date because of [reason].
-     */
-    fun invalidateAll(reason: TablistUpdateReason) = additions.invalidateAll(reason)
-
-    /**
-     * Brings [player]'s header and footer up to date right away, for a player who cannot wait for
-     * the next update of everybody because they have nothing yet.
-     */
-    fun invalidatePlayer(player: TabPlayer) = additions.invalidatePlayer(player)
-
-    /**
-     * Forgets everything remembered about [playerUuid], because they left.
-     */
-    fun forget(playerUuid: UUID) = additions.forget(playerUuid)
-
-    /**
-     * Re-sends the header, the footer and the entry of everyone currently online, as a configuration
-     * reload has to.
-     */
-    fun refreshAll() {
-        invalidateAll(TablistUpdateReason.CONFIGURATION)
-
-        for (player in TabPlatform.onlinePlayers()) {
-            requestFormat(player)
+        if (
+            current != null &&
+            current.version == version &&
+            current.templates.matches(config.header, config.footer)
+        ) {
+            return current.templates
         }
-    }
 
-    /**
-     * Asks for [player]'s tablist entry to be rebuilt.
-     *
-     * Rebuilds of the same player are collapsed and run one after another, so this can be called as
-     * often as any listener fires. Safe to call from any thread.
-     */
-    fun requestFormat(player: TabPlayer) = updates.request(player.uuid, player)
-
-    fun isAfk(playerUuid: UUID) =
-        TabPlatform.playtimeAvailable && SurfPlaytimeHook.isAfk(playerUuid)
-
-    fun isVanished(playerUuid: UUID) = TabPlatform.isVanished(playerUuid)
-
-    /**
-     * Reads everything the tablist fills its own placeholders with, once, for a whole update.
-     */
-    private fun captureValues(): TablistValues {
-        val now = ZonedDateTime.now()
-
-        return TablistValues(
-            generation = generations.incrementAndGet(),
-            server = SurfServer.current().name,
-            onlinePlayers = TabPlatform.onlinePlayerCount(),
-            maxPlayers = TabPlatform.maxPlayerCount(),
-            date = formatTablistDate(now),
-            time = formatTablistTime(now)
+        val templates = TablistTemplates.analyze(
+            config.header,
+            config.footer,
+            miniMessage,
+            ::resolvePlaceholder
         )
+        analyzed = Analyzed(templates, version)
+
+        return templates
     }
 
-    private fun getAfkTag(playerUuid: UUID) = if (isAfk(playerUuid)) {
-        afkTag
-    } else {
-        Component.empty()
+    /**
+     * Returns the fallback refresh interval for templates containing values whose changes cannot be
+     * observed directly.
+     *
+     * @return the configured fallback refresh interval
+     */
+    fun refreshInterval(): Duration = tablistConfig.unknownPlaceholderRefreshSeconds.seconds
+
+    private fun resolvePlaceholder(tagName: String): TabPlaceholder? {
+        return builtins[tagName] ?: registered[tagName]
     }
 
-    private fun getLiveTag(playerUuid: UUID) =
-        if (TabPlatform.contentCreatorAvailable) {
-            ContentCreatorHook.renderLiveTag(playerUuid)
-        } else {
-            Component.empty()
+    /**
+     * Captures the current values of all placeholders referenced by [templates].
+     *
+     * Each placeholder is evaluated at most once for the snapshot. Failures are logged and the
+     * corresponding value is omitted, allowing the remainder of the header or footer to render
+     * normally. Coroutine cancellation is propagated unchanged.
+     *
+     * @param templates the templates whose referenced placeholder values should be captured
+     * @return a new snapshot containing the resolved values and current online player count
+     */
+    private fun captureValues(templates: TablistTemplates): TablistValues {
+        val needed = templates.placeholders
+        val values = Object2ObjectOpenHashMap<TabPlaceholder, Component>(needed.size)
+
+        for (placeholder in needed) {
+            try {
+                values[placeholder] = placeholder.value()
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (throwable: Throwable) {
+                log.atWarning()
+                    .withCause(throwable)
+                    .log("Failed to read tablist placeholder <%s>", placeholder.tagName)
+            }
         }
 
-    private suspend fun getClanTag(playerUuid: UUID): Component? {
-        if (!TabPlatform.clanAvailable) return null
-
-        val tag = ClanHook.getClanTag(playerUuid) ?: return null
-
-        return buildText {
-            appendSpace()
-            append(tag)
-        }
+        return TablistValues(generations.incrementAndGet(), values, tabPlatform.onlinePlayerCount())
     }
 
-    private fun getVanishTag(playerUuid: UUID) = if (isVanished(playerUuid)) {
-        vanishTag
-    } else {
-        Component.empty()
-    }
+    private class Analyzed(val templates: TablistTemplates, val version: Int)
 }

@@ -1,7 +1,6 @@
 package dev.slne.surf.tab.paper.listener
 
 import dev.slne.surf.tab.core.client.service.TablistService
-import dev.slne.surf.tab.paper.platform.PaperTabPlayer
 import dev.slne.surf.vanish.api.event.PlayerNickEvent
 import dev.slne.surf.vanish.api.event.PlayerReappearEvent
 import dev.slne.surf.vanish.api.event.PlayerUnNickEvent
@@ -12,20 +11,20 @@ import org.bukkit.event.Listener
 
 object VanishListener : Listener {
     @EventHandler
-    fun onVanish(event: PlayerVanishEvent) = requestFormat(event.player)
+    fun onVanish(event: PlayerVanishEvent) = updateEntry(event.player)
 
     @EventHandler
-    fun onReappear(event: PlayerReappearEvent) = requestFormat(event.player)
+    fun onReappear(event: PlayerReappearEvent) = updateEntry(event.player)
 
     @EventHandler
-    fun onNick(event: PlayerNickEvent) = requestFormat(event.player)
+    fun onNick(event: PlayerNickEvent) = updateEntry(event.player)
 
     @EventHandler
-    fun onUnNick(event: PlayerUnNickEvent) = requestFormat(event.player)
+    fun onUnNick(event: PlayerUnNickEvent) = updateEntry(event.player)
 
-    private fun requestFormat(player: Player?) {
+    private fun updateEntry(player: Player?) {
         if (player == null) return
 
-        TablistService.requestFormat(PaperTabPlayer(player))
+        TablistService.updateEntry(player.uniqueId)
     }
 }
