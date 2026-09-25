@@ -1,8 +1,10 @@
 package dev.slne.surf.tab.core.client.service
 
 import dev.slne.surf.tab.core.client.platform.TabViewer
+import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
+import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -158,6 +160,7 @@ private class SentAdditions {
     @Volatile
     private var generation = Long.MIN_VALUE
 
+    private var audience: WeakReference<Audience>? = null
     private var header: Component? = null
     private var footer: Component? = null
 
@@ -185,8 +188,12 @@ private class SentAdditions {
 
         generation = values.generation
 
-        if (header == this.header && footer == this.footer) return false
+        val audience = player.audience
+        if (audience === this.audience?.get() && header == this.header && footer == this.footer) {
+            return false
+        }
 
+        this.audience = WeakReference(audience)
         this.header = header
         this.footer = footer
 

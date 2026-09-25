@@ -13,8 +13,10 @@ import dev.slne.surf.tab.core.client.service.UpdateCoalescer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
+import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
+import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
@@ -150,9 +152,9 @@ class TabEntries {
     }
 
     private suspend fun show(player: TabPlayer, name: Component, order: Int) {
-        val next = Shown(name, order)
+        val next = Shown(player.audience, name, order)
 
-        if (shown.put(player.uuid, next) == next) return
+        if (shown.put(player.uuid, next)?.sameAs(next) == true) return
 
         player.showTabEntry(name, order)
     }
@@ -220,5 +222,11 @@ class TabEntries {
         fallback
     }
 
-    private data class Shown(val name: Component, val order: Int)
+    private class Shown(audience: Audience, val name: Component, val order: Int) {
+        private val audience = WeakReference(audience)
+
+        fun sameAs(other: Shown): Boolean {
+            return audience.get() === other.audience.get() && name == other.name && order == other.order
+        }
+    }
 }
