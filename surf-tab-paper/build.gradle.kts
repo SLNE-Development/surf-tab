@@ -25,10 +25,6 @@ surfPaperPluginApi {
     }
 }
 
-repositories {
-    mavenLocal()
-}
-
 dependencies {
     compileOnly(libs.mini.placeholders)
     compileOnly(libs.mini.placeholders.kotlin)
