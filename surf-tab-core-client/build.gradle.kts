@@ -7,6 +7,10 @@ surfCoreApi {
     withSurfRedis()
 }
 
+repositories {
+    mavenLocal()
+}
+
 dependencies {
     api(project(":surf-tab-api"))
 

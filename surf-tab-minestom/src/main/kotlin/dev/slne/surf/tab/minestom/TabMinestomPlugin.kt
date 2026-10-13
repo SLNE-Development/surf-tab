@@ -1,28 +1,38 @@
 package dev.slne.surf.tab.minestom
 
-import com.google.auto.service.AutoService
-import dev.slne.minestom.lobby.api.plugin.MinestomPlugin
-import dev.slne.minestom.lobby.api.plugin.annotation.MinestomPluginMeta
-import dev.slne.surf.tab.minestom.command.TabCommandRegistrar
+import dev.slne.surf.api.minestom.plugin.SurfMinestomPlugin
+import dev.slne.surf.tab.core.client.hook.ClanHook
+import dev.slne.surf.tab.core.client.hook.ContentCreatorHook
+import dev.slne.surf.tab.core.client.redis.redisLoader
+import dev.slne.surf.tab.core.client.service.TablistService
+import dev.slne.surf.tab.minestom.command.surfTabCommand
+import dev.slne.surf.tab.minestom.hook.registerLuckPermsListeners
 import dev.slne.surf.tab.minestom.listener.PlayerListener
 import dev.slne.surf.tab.minestom.listener.PlaytimeListener
+import dev.slne.surf.tab.minestom.platform.MinestomTabPlatform
 
-@AutoService(MinestomPlugin::class)
-@MinestomPluginMeta(
-    "surf-tab-minestom",
-    dependsOn = [
-        "surf-api-minestom",
-        "surf-redis-minestom",
-        "surf-core-minestom",
-        "surf-clan-minestom",
-        "surf-playtime-minestom",
-        "surf-content-creator-minestom"
-    ]
-)
-class TabMinestomPlugin : MinestomPlugin(TabMinestomEntrypoint::class.java) {
-    override fun configurePlugin() {
-        bindCommandRegistrar<TabCommandRegistrar>()
-        bindEventRegistrar<PlayerListener>()
-        bindEventRegistrar<PlaytimeListener>()
+object TabMinestomPlugin : SurfMinestomPlugin() {
+    override suspend fun onLoad() {
+        redisLoader.onLoad()
+        redisLoader.subscribeToEvents()
+        redisLoader.onEnable()
+
+        TablistService.start(MinestomTabPlatform())
+
+        registerLuckPermsListeners()
+        ClanHook.createListeners()
+        ContentCreatorHook.registerListener()
+    }
+
+    override suspend fun onEnable() {
+        surfTabCommand()
+
+        PlayerListener.register(eventNode)
+        PlaytimeListener.register(eventNode)
+    }
+
+    override suspend fun onDisable() {
+        TablistService.stop()
+        redisLoader.disconnect()
     }
 }

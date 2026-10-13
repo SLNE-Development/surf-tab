@@ -1,6 +1,6 @@
 package dev.slne.surf.tab.minestom.platform
 
-import dev.slne.minestom.lobby.api.coroutine.withEntity
+import dev.slne.surf.api.minestom.coroutine.withEntity
 import dev.slne.surf.api.core.luckperms.LuckPermsAccess
 import dev.slne.surf.api.core.luckperms.prefix
 import dev.slne.surf.api.core.minimessage.miniMessage
