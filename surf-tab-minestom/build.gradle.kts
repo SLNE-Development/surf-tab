@@ -13,6 +13,7 @@ minestomPluginFile {
 
     pluginDependencies {
         register("surf-redis-minestom")
+        register("surf-core-minestom")
         register("surf-clan-minestom")
         register("surf-playtime-minestom")
         register("surf-content-creator-minestom")
