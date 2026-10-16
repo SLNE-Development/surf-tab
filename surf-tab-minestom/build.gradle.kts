@@ -7,6 +7,18 @@ surfMinestomApi {
     withSurfRedis()
 }
 
+minestomPluginFile {
+    main = "dev.slne.surf.tab.minestom.TabMinestomPlugin"
+    authors = listOf("red")
+
+    pluginDependencies {
+        register("surf-redis-minestom")
+        register("surf-clan-minestom")
+        register("surf-playtime-minestom")
+        register("surf-content-creator-minestom")
+    }
+}
+
 dependencies {
     api(project(":surf-tab-core-client"))
 
