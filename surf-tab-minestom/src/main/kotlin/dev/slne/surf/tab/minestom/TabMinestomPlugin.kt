@@ -13,9 +13,7 @@ import dev.slne.surf.tab.minestom.platform.MinestomTabPlatform
 
 object TabMinestomPlugin : SurfMinestomPlugin() {
     override suspend fun onLoad() {
-        redisLoader.onLoad()
-        redisLoader.subscribeToEvents()
-        redisLoader.onEnable()
+        redisLoader.connect()
 
         TablistService.start(MinestomTabPlatform())
 
