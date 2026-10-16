@@ -246,7 +246,8 @@ class TabEntries {
         }
     }
 
-    private fun Component.darkenColors(factor: Double = 0.3): Component {
+    // factor: höher = heller, niedriger = dunkler
+    private fun Component.darkenColors(factor: Double = 0.6): Component {
         val color = style().color()
         val newColor = color?.let {
             TextColor.color(
