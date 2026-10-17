@@ -16,6 +16,7 @@ import kotlinx.coroutines.withTimeout
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
+import net.kyori.adventure.text.format.TextColor
 import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -35,7 +36,7 @@ private val afkTag = buildText {
 
 private val vanishTag = buildText {
     darkSpacer("[")
-    note("V")
+    error("SPEC")
     darkSpacer("]")
     appendSpace()
 }
@@ -128,14 +129,29 @@ class TabEntries {
 
     private suspend fun render(uuid: UUID) {
         val player = tabPlatform.player(uuid) ?: return
+        val vanished = tabPlatform.isVanished(uuid)
 
         val event = TabEntryRenderEvent(
             uuid,
-            name = player.baseNameSnapshot(),
-            order = part("order", uuid, 0) { LuckPermsHook.getWeight(uuid) }
+            name = if (vanished) {
+                player.baseNameSnapshot().darkenColors()
+            } else {
+                player.baseNameSnapshot()
+            },
+            order = part("order", uuid, 0) {
+                val lpWeight = LuckPermsHook.getWeight(uuid)
+
+                if (vanished) {
+                    lpWeight + 1000000
+                } else {
+                    lpWeight
+                }
+            }
         )
 
-        if (!event.call()) return
+        if (!event.call()) {
+            return
+        }
 
         if (!event.decorate) {
             show(player, event.name, event.order)
@@ -228,5 +244,23 @@ class TabEntries {
         fun sameAs(other: Shown): Boolean {
             return audience.get() === other.audience.get() && name == other.name && order == other.order
         }
+    }
+
+    // factor: higher = lighter, lower = darker
+    private fun Component.darkenColors(factor: Double = 0.6): Component {
+        val color = style().color()
+        val newColor = color?.let {
+            TextColor.color(
+                (it.red() * factor).toInt(),
+                (it.green() * factor).toInt(),
+                (it.blue() * factor).toInt()
+            )
+        }
+
+        return children(
+            children().map { it.darkenColors(factor) }
+        ).style(
+            style().color(newColor)
+        )
     }
 }
